@@ -1,0 +1,35 @@
+.btn-outline-danger,
+.btn-outline-secondary {
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-add-vaccine {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    font-size: 1rem;
+  }
+  
+  .btn-add-vaccine i {
+    font-size: 1.2rem;
+  }
+  
+  .btn-add-vaccine:hover {
+    background-color: #0056b3;
+    color: #fff;
+  }
+  

@@ -1,0 +1,61 @@
+.reconcile-table {
+  border-radius: 12px;
+  background: #f8f9fa;
+}
+
+.table td, .table th {
+  vertical-align: middle !important;
+  padding: 1rem;
+}
+
+
+.submit-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1000;
+  border-top: 1px solid #dee2e6;
+}
+
+.btn-outline-primary,
+.btn-outline-danger {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.btn-add-vaccine {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #67AE6E;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  font-size: 1rem;
+}
+
+.btn-add-vaccine .icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.btn-add-vaccine:hover {
+  background-color: #4f9b5c;
+  color: #fff;
+  text-decoration: none;
+}
+
+.table-danger {
+  background-color: #ffe5e5 !important;
+}
+
+.icon{
+  margin-top: 5px;
+}
