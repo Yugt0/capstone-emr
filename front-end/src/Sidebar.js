@@ -39,13 +39,13 @@ function Sidebar() {
             />
             <CustomText to="/vaccinelist">Vaccine List</CustomText>
           </CustomLink>
-          <CustomLink to="/contraceptive">
+          <CustomLink to="/family-planning-list">
             <img
               src="images/contraceptive-pills.png"
               alt="Dashboard-logo"
               class="icon"
             />
-            <CustomText to="/contraceptive">Contraceptive List</CustomText>
+            <CustomText to="/family-planning-list">Family Planning List</CustomText>
           </CustomLink>
         </ul>
       </div>

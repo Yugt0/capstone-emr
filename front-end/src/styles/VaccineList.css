@@ -1,13 +1,145 @@
-.reconcile-table {
+.stock-card-table {
+  overflow-x: auto;
+  padding: 0;
+  margin: 0;
+  background: #fff;
   border-radius: 12px;
-  background: #f8f9fa;
+  box-shadow: 0 2px 12px rgba(44, 62, 80, 0.08);
 }
 
-.table td, .table th {
-  vertical-align: middle !important;
-  padding: 1rem;
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1100px;
+  background: #fff;
 }
 
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: #1976d2;
+  color: #fff;
+  z-index: 2;
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+  border-bottom: 2px solid #1565c0;
+}
+
+.table td {
+  background: #fff;
+  font-size: 0.98rem;
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.table tbody tr.table-warning {
+  background: #fffbe6 !important;
+}
+
+.table tbody tr:hover {
+  background: #f5faff;
+}
+
+.btn-edit, .btn-delete {
+  border: none;
+  background: none;
+  font-size: 1.1rem;
+  margin: 0 0.2rem;
+  color: #1976d2;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.btn-edit:disabled {
+  color: #b0b0b0;
+  cursor: not-allowed;
+}
+.btn-delete:hover {
+  color: #e53935;
+}
+
+.btn-add-vaccine {
+  background: #43a047;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(67, 160, 71, 0.08);
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 40px;
+  margin-bottom: 1rem;
+}
+.btn-add-vaccine:hover {
+  background: #388e3c;
+}
+
+.icon {
+  font-size: 1.2rem;
+}
+
+.input-group-text {
+  background: #f5f5f5;
+  color: #1976d2;
+  font-weight: 600;
+  border: 1px solid #e0e0e0;
+}
+
+.form-control:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 0.1rem #1976d233;
+}
+
+@media (max-width: 900px) {
+  .table {
+    min-width: 900px;
+  }
+  .btn-add-vaccine {
+    margin-left: 0;
+    margin-bottom: 1rem;
+  }
+}
+@media (max-width: 600px) {
+  .stock-card-table {
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(44, 62, 80, 0.08);
+  }
+  .table {
+    min-width: 600px;
+    font-size: 0.92rem;
+  }
+  .btn-add-vaccine {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Professional Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-edit:disabled {
+  background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-edit:disabled:hover {
+  background: linear-gradient(135deg, #bdc3c7 0%, #95a5a6 100%);
+  transform: none;
+  box-shadow: none;
+}
 
 .submit-bar {
   position: sticky;
@@ -16,46 +148,125 @@
   border-top: 1px solid #dee2e6;
 }
 
-.btn-outline-primary,
-.btn-outline-danger {
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.btn-add-vaccine {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-  background-color: #67AE6E;
-  color: white;
-  border: none;
-  border-radius: 50px;
-  padding: 0.5rem 1.25rem;
-  font-weight: 500;
-  transition: background-color 0.3s ease;
-  font-size: 1rem;
-}
-
 .btn-add-vaccine .icon {
-  font-size: 1.2rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
-.btn-add-vaccine:hover {
-  background-color: #4f9b5c;
-  color: #fff;
-  text-decoration: none;
+/* Enhanced Data Styling */
+.data-cell {
+  font-weight: 600;
+  color: #2c3e50;
 }
 
-.table-danger {
-  background-color: #ffe5e5 !important;
+.data-cell.positive {
+  color: #27ae60;
 }
 
-.icon{
-  margin-top: 5px;
+.data-cell.negative {
+  color: #e74c3c;
+}
+
+.data-cell.warning {
+  color: #f39c12;
+}
+
+.data-cell.primary {
+  color: #3498db;
+  font-weight: 700;
+}
+
+/* Modal styling */
+.modal-content {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  border-bottom: 1px solid #1a252f;
+  border-radius: 16px 16px 0 0;
+  padding: 1.5rem 2rem;
+}
+
+.modal-title {
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.form-label {
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.875rem;
+}
+
+.form-control {
+  border-radius: 12px;
+  border: 2px solid #e1e5e9;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  background: #f8f9fa;
+}
+
+.form-control:disabled {
+  background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+  color: #7f8c8d;
+  border-color: #bdc3c7;
+}
+
+/* Search input styling */
+.input-group {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Table row animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.table tbody tr {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+.table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+.table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+.table tbody tr:nth-child(4) { animation-delay: 0.4s; }
+.table tbody tr:nth-child(5) { animation-delay: 0.5s; }
+
+.modal.show.d-block {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+.modal-dialog {
+  margin: auto !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  position: fixed !important;
+  max-width: 90vw;
 }

@@ -430,34 +430,48 @@ export default function PatientList() {
                 &times;
               </button>
             </div>
-            <div className="modal-body">
-              <p>
-                <strong>Temperature: </strong> 41{" "}
-              </p>
-              <p>
-                <strong>Patient History: </strong> n/a{" "}
-              </p>
-              <p>
-                <strong>Weight: </strong> 50kg{" "}
-              </p>
-              <p>
-                <strong>Height: </strong> 5'4{" "}
-              </p>
-              <p>
-                <strong>Age: </strong> 21{" "}
-              </p>
-              <p>
-                <strong>Assessment: </strong> -Doctor Assessment-{" "}
-              </p>
-              <p>
-                <strong>Plan: </strong> -Doctor Plan-{" "}
-              </p>
+            <div className="modal-body medical-modal-body-gradient">
+              <div className="section-header">Vitals</div>
+              <div className="medical-records-grid">
+                <div className="info-item">
+                  <span className="info-label">🌡️ Temperature:</span>
+                  <span className="info-value highlight">41°C</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">🧬 Patient History:</span>
+                  <span className="info-value">n/a</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">⚖️ Weight:</span>
+                  <span className="info-value">50kg</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">📏 Height:</span>
+                  <span className="info-value">5'4"</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">🎂 Age:</span>
+                  <span className="info-value">21</span>
+                </div>
+              </div>
+              <div className="section-divider"></div>
+              <div className="section-header">Doctor Notes</div>
+              <div className="medical-records-grid">
+                <div className="info-item">
+                  <span className="info-label">�� Assessment:</span>
+                  <span className="info-value">-Doctor Assessment-</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">📝 Plan:</span>
+                  <span className="info-value">-Doctor Plan-</span>
+                </div>
+              </div>
             </div>
             <div className="modal-footer d-flex justify-content-end">
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => setViewModal(false)}
+                onClick={() => setviewMedicalRecords(false)}
               >
                 Close
               </button>

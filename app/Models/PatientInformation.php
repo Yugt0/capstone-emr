@@ -15,7 +15,7 @@ class PatientInformation extends Model
         'birth_date',
         'gender',
         'contact_number',
-        'address',
+        'address',      
         'barangay',
     ];
 

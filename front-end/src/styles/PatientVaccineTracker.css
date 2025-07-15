@@ -57,4 +57,247 @@
     font-size: 0.85rem;
     border-radius: 4px;
 }
+
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  box-shadow: none;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.icon-btn .bi {
+  margin: 0;
+}
+.icon-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #007bff33;
+}
+.icon-btn:hover {
+  background: #f0f8ff;
+}
+
+/* Remove enlarge on hover for cards and table rows */
+.card:hover, tr:hover {
+  transform: none !important;
+  box-shadow: inherit !important;
+}
+
+/* Remove or adjust any custom thead/th background and height rules */
+thead th, thead tr {
+  background-color: #007bff !important; /* Bootstrap primary blue */
+  color: #fff !important;
+  vertical-align: middle;
+  text-align: center;
+  font-weight: 600;
+  border-bottom: 2px solid #dee2e6;
+  padding: 0.75rem;
+}
+
+/* Remove any large min-height or height on thead/tr/th */
+thead tr, thead th {
+  min-height: unset !important;
+  height: unset !important;
+}
+
+/* Table body cells */
+tbody td {
+  vertical-align: middle;
+  text-align: center;
+  font-size: 1rem;
+  padding: 0.75rem;
+}
+
+/* Action buttons spacing */
+.table .btn {
+  margin-bottom: 0.25rem;
+}
+
+/* Responsive fix for wide tables */
+.table-responsive {
+  width: 98%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.table-actions .btn {
+  min-width: 90px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: transform 0.08s;
+}
+
+.table-actions .btn:active {
+  transform: scale(0.97);
+}
+
+/* Modern gradient backgrounds */
+.bg-gradient-primary {
+  background: #007bff !important;
+}
+
+.table-header-gradient {
+  background: #007bff !important;
+}
+
+/* Enhanced table styling */
+.table-modern {
+  min-width: 1200px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.table-modern thead th {
+  background: #007bff !important;
+  color: white !important;
+  border: 1px solid white !important;
+  padding: 1rem !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.table-modern tbody td {
+  padding: 1rem !important;
+  border-color: #f1f3f4 !important;
+  vertical-align: middle !important;
+}
+
+.table-row-hover:hover {
+  background-color: #f8f9fa !important;
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+/* Modern form controls */
+.form-control-modern {
+  border: 2px solid #e9ecef !important;
+  border-radius: 8px !important;
+  padding: 0.75rem 1rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.form-control-modern:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+}
+
+/* Enhanced action buttons */
+.table-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Modern modal styling */
+.modal-modern .modal-content {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  width: 1000px !important;
+  max-width: none !important;
+}
+
+.modal-modern .modal-header {
+  border-radius: 16px 16px 0 0;
+  padding: 1.5rem;
+}
+
+.modal-modern .modal-body {
+  padding: 0;
+}
+
+/* Enhanced card styling */
+.card {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
+}
+
+.card-body, .Card.Body {
+  overflow-x: visible !important;
+}
+
+/* Button enhancements */
+.btn {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Empty state styling */
+.empty-state {
+  padding: 3rem 1rem;
+}
+
+.empty-state i {
+  opacity: 0.5;
+}
+
+/* Badge enhancements */
+.badge {
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .table-responsive {
+    border-radius: 8px;
+  }
+  
+  .modal-modern .modal-dialog {
+    margin: 1rem;
+  }
+}
+
+/* Animation for loading states */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.table-modern tbody tr {
+  animation: fadeIn 0.3s ease;
+}
   

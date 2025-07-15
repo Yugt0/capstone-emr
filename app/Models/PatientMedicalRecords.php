@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\PatientInformation;
 
 
 class PatientMedicalRecords extends Model
@@ -28,6 +29,6 @@ class PatientMedicalRecords extends Model
 
     public function patient()
     {
-        return $this->belongsTo(Patient::class);
+        return $this->belongsTo(PatientInformation::class, 'patient_id');
     }
 }

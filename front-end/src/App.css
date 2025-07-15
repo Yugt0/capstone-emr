@@ -1,0 +1,218 @@
+/* Professional Layout Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f8fafc;
+  overflow-x: hidden;
+}
+
+/* Main Layout Container */
+.d-flex.min-vh-100 {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+/* Sidebar Container */
+.col-md-3.col-lg-2.sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: transparent;
+  position: relative;
+  z-index: 1000;
+}
+
+/* Main Content Area */
+.col-md-9.col-lg-10 {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  /* Remove margin-left so content sits next to sidebar */
+  /* margin-left: 280px; */
+  background: #f8fafc;
+}
+
+/* Content Wrapper */
+.col-md-9.col-lg-10 > div:not(.header) {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  background: #ffffff;
+  margin: 1rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Page Content Styling */
+.patient-list-container,
+.dashboard-container,
+.vaccine-tracker-container,
+.contraceptive-container,
+.vaccine-list-container {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  min-height: calc(100vh - 140px);
+}
+
+/* Responsive Design */
+@media screen and (max-width: 1024px) {
+  .col-md-3.col-lg-2.sidebar {
+    width: 240px;
+    min-width: 240px;
+  }
+  /* Removed margin-left from .col-md-9.col-lg-10 to prevent double gap */
+}
+
+@media screen and (max-width: 768px) {
+  .d-flex.min-vh-100 {
+    flex-direction: column;
+  }
+  
+  .col-md-3.col-lg-2.sidebar {
+    width: 100%;
+    min-width: 100%;
+    position: relative;
+    z-index: 1000;
+  }
+  
+  .col-md-9.col-lg-10 {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .col-md-9.col-lg-10 > div:not(.header) {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .patient-list-container,
+  .dashboard-container,
+  .vaccine-tracker-container,
+  .contraceptive-container,
+  .vaccine-list-container {
+    padding: 1rem;
+    min-height: auto;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .col-md-9.col-lg-10 > div:not(.header) {
+    margin: 0.25rem;
+    padding: 0.75rem;
+  }
+  
+  .patient-list-container,
+  .dashboard-container,
+  .vaccine-tracker-container,
+  .contraceptive-container,
+  .vaccine-list-container {
+    padding: 0.75rem;
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation for page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease-out;
+}
+
+.page-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 0.3s ease-in;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .col-md-9.col-lg-10 > div:not(.header),
+  .patient-list-container,
+  .dashboard-container,
+  .vaccine-tracker-container,
+  .contraceptive-container,
+  .vaccine-list-container {
+    border: 2px solid #000;
+    background: #fff;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #0f172a;
+  }
+  
+  .col-md-9.col-lg-10 {
+    background: #0f172a;
+  }
+  
+  .col-md-9.col-lg-10 > div:not(.header),
+  .patient-list-container,
+  .dashboard-container,
+  .vaccine-tracker-container,
+  .contraceptive-container,
+  .vaccine-list-container {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #475569;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+}
+
