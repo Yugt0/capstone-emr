@@ -13,6 +13,7 @@ export default function PatientList() {
   const [viewMedicalRecords, setviewMedicalRecords] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [addMedicalRecordModal, setAddMedicalRecordModal] = useState(false);
+  const [editMedicalRecordModal, setEditMedicalRecordModal] = useState(false);
   const [selectedPatientIdx, setSelectedPatientIdx] = useState(null);
   const [selectedRecordIdx, setSelectedRecordIdx] = useState(0);
   const [form, setForm] = useState({});
@@ -22,6 +23,10 @@ export default function PatientList() {
   const [searchDate, setSearchDate] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   // Fetch patients and their medical records
   useEffect(() => {
     fetchPatients();
@@ -30,6 +35,29 @@ export default function PatientList() {
   useEffect(() => {
     setFilteredPatients(patients);
   }, [patients]);
+
+  // Pagination calculations
+  const totalEntries = filteredPatients.length;
+  const totalPages = Math.ceil(totalEntries / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentData = filteredPatients.slice(startIndex, endIndex);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredPatients, rowsPerPage]);
+
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Handle rows per page change
+  const handleRowsPerPageChange = (newRowsPerPage) => {
+    setRowsPerPage(newRowsPerPage);
+    setCurrentPage(1);
+  };
 
   const handleSearch = () => {
     setFilteredPatients(
@@ -178,12 +206,32 @@ export default function PatientList() {
         body: JSON.stringify(recordForm),
       });
       if (!res.ok) throw new Error("Failed to update medical record");
-      setAddMedicalRecordModal(false);
+      setEditMedicalRecordModal(false);
       setRecordForm({});
       fetchMedicalRecords(patient.id);
     } catch (err) {
       alert("Failed to update medical record");
     }
+  };
+
+  // Handle edit medical record button click
+  const handleEditMedicalRecordClick = (recordIdx) => {
+    const record = medicalRecords[recordIdx];
+    setRecordForm({
+      temperature: record.temperature || "",
+      weight: record.weight || "",
+      age: record.age || "",
+      respiratory_rate: record.respiratory_rate || "",
+      cardiac_rate: record.cardiac_rate || "",
+      blood_pressure: record.blood_pressure || "",
+      chief_complaint: record.chief_complaint || "",
+      patient_history: record.patient_history || "",
+      history_of_present_illness: record.history_of_present_illness || "",
+      assessment: record.assessment || "",
+      plan: record.plan || ""
+    });
+    setSelectedRecordIdx(recordIdx);
+    setEditMedicalRecordModal(true);
   };
 
   // Delete Medical Record
@@ -328,7 +376,7 @@ export default function PatientList() {
                 </tr>
               </thead>
               <tbody>
-                {filteredPatients.map((patient, idx) => (
+                {currentData.map((patient, idx) => (
                   <tr key={patient.id}>
                     <td>{patient.full_name}</td>
                     <td>{patient.gender}</td>
@@ -370,6 +418,127 @@ export default function PatientList() {
                 ))}
               </tbody>
             </table>
+          </div>
+          {/* Pagination Controls */}
+          <div className="pagination-section mt-4 p-3" style={{
+            background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+          }}>
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+              {/* Rows per page selector */}
+              <div className="d-flex align-items-center gap-2">
+                <span className="text-muted fw-semibold" style={{ fontSize: '14px' }}>
+                  <i className="bi bi-list-ul me-1"></i>
+                  Rows per page:
+                </span>
+                <select
+                  className="form-select form-select-sm"
+                  value={rowsPerPage}
+                  onChange={(e) => handleRowsPerPageChange(parseInt(e.target.value))}
+                  style={{
+                    width: 'auto',
+                    minWidth: '80px',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    background: '#fff',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                  }}
+                >
+                  <option value="10">10</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
+
+              {/* Entry counter */}
+              <div className="d-flex align-items-center">
+                <span className="text-muted fw-semibold" style={{ fontSize: '14px' }}>
+                  <i className="bi bi-info-circle me-1"></i>
+                  Showing {startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
+                </span>
+              </div>
+
+              {/* Page navigation */}
+              <div className="d-flex align-items-center gap-2">
+                <button
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  style={{
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    border: '1.5px solid #3b82f6',
+                    transition: 'all 0.2s ease',
+                    color: '#3b82f6'
+                  }}
+                >
+                  <i className="bi bi-chevron-left me-1"></i>
+                  Previous
+                </button>
+                
+                {/* Page numbers - simplified like the image */}
+                <div className="d-flex align-items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, index) => {
+                    const pageNumber = index + 1;
+                    const isCurrentPage = pageNumber === currentPage;
+                    
+                    // Show all page numbers for simplicity (like the image)
+                    return (
+                      <button
+                        key={pageNumber}
+                        className={`btn btn-sm ${isCurrentPage ? 'btn-primary' : 'btn-outline-primary'}`}
+                        onClick={() => handlePageChange(pageNumber)}
+                        style={{
+                          borderRadius: '6px',
+                          padding: '6px 12px',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          minWidth: '36px',
+                          transition: 'all 0.2s ease',
+                          ...(isCurrentPage && {
+                            backgroundColor: '#3b82f6',
+                            borderColor: '#3b82f6',
+                            color: 'white'
+                          }),
+                          ...(!isCurrentPage && {
+                            color: '#3b82f6',
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'transparent'
+                          })
+                        }}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    border: '1.5px solid #3b82f6',
+                    transition: 'all 0.2s ease',
+                    color: '#3b82f6'
+                  }}
+                >
+                  Next
+                  <i className="bi bi-chevron-right ms-1"></i>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -624,7 +793,13 @@ export default function PatientList() {
       {/* Medical Records Modal */}
       {viewMedicalRecords && selectedPatient && (
         <div className="modal-overlay">
-          <div className="modal-content shadow rounded medical-records-modal">
+          <div className="modal-content shadow rounded medical-records-modal" style={{ 
+            maxWidth: '90vw', 
+            width: '90vw', 
+            minWidth: '800px',
+            maxHeight: '90vh',
+            height: '90vh'
+          }}>
             <div className="modal-header d-flex justify-content-between align-items-center">
               <h5 className="modal-title">{selectedPatient.full_name}'s Medical Records</h5>
               <button
@@ -635,7 +810,10 @@ export default function PatientList() {
                 &times;
               </button>
             </div>
-            <div className="modal-body medical-modal-body-gradient">
+            <div className="modal-body medical-modal-body-gradient" style={{ 
+              maxHeight: 'calc(90vh - 120px)', 
+              overflowY: 'auto' 
+            }}>
               <div className="d-flex justify-content-end mb-4">
                 <button
                   type="button"
@@ -664,9 +842,9 @@ export default function PatientList() {
                   Add Medical Record
                 </button>
               </div>
-              <div className="d-flex" style={{minHeight: '300px'}}>
+              <div className="d-flex" style={{minHeight: '400px'}}>
                 {/* Timeline on the left */}
-                <div className="timeline-list">
+                <div className="timeline-list" style={{ minWidth: '200px', maxWidth: '250px' }}>
                   {records.length === 0 ? (
                     <div className="no-records">No medical records found.</div>
                   ) : (
@@ -678,78 +856,91 @@ export default function PatientList() {
                           onClick={() => setSelectedRecordIdx(idx)}
                         >
                           <span className="timeline-date timeline-date-large">{rec.created_at ? rec.created_at.slice(0, 10) : ''}</span>
-                          <button
-                            className="btn btn-sm btn-outline-danger ms-2 timeline-delete-btn"
-                            onClick={e => { e.stopPropagation(); handleDeleteMedicalRecord(idx); }}
-                            title="Delete Record"
-                            style={{ verticalAlign: 'middle' }}
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
+                          <div className="timeline-actions">
+                            <button
+                              className="btn btn-sm btn-outline-primary me-1 timeline-edit-btn"
+                              onClick={e => { e.stopPropagation(); handleEditMedicalRecordClick(idx); }}
+                              title="Edit Record"
+                              style={{ verticalAlign: 'middle' }}
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-danger timeline-delete-btn"
+                              onClick={e => { e.stopPropagation(); handleDeleteMedicalRecord(idx); }}
+                              title="Delete Record"
+                              style={{ verticalAlign: 'middle' }}
+                            >
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
                         </li>
                       ))}
                     </ul>
                   )}
                 </div>
                 {/* Details on the right */}
-                <div className="timeline-details flex-grow-1 ms-4">
+                <div className="timeline-details" style={{ flex: 1, padding: '2rem' }}>
                   {selectedRecord ? (
-                    <>
-                      <div className="d-flex align-items-center mb-2">
-                        <div className="me-auto section-header">Vitals</div>
-                        <div className="record-date-badge">{selectedRecord.date}</div>
-                      </div>
+                    <div>
+                      <div className="section-header mb-3">Vitals</div>
                       <div className="medical-records-grid">
                         <div className="info-item">
                           <span className="info-label">🌡️ Temperature:</span>
-                          <span className="info-value highlight">{selectedRecord.vitals?.temperature || selectedRecord.temperature}</span>
-                        </div>
-                        <div className="info-item">
-                          <span className="info-label">🧬 Patient History:</span>
-                          <span className="info-value">{selectedRecord.patient_history}</span>
+                          <span className="info-value highlight">{selectedRecord.temperature || 'N/A'}</span>
                         </div>
                         <div className="info-item">
                           <span className="info-label">⚖️ Weight:</span>
-                          <span className="info-value">{selectedRecord.vitals?.weight || selectedRecord.weight}</span>
+                          <span className="info-value">{selectedRecord.weight || 'N/A'}</span>
                         </div>
                         <div className="info-item">
                           <span className="info-label">🎂 Age:</span>
-                          <span className="info-value">{selectedRecord.vitals?.age || selectedRecord.age}</span>
+                          <span className="info-value">{selectedRecord.age || 'N/A'}</span>
                         </div>
                         <div className="info-item">
                           <span className="info-label">💨 Respiratory Rate:</span>
-                          <span className="info-value">{selectedRecord.respiratory_rate}</span>
+                          <span className="info-value">{selectedRecord.respiratory_rate || 'N/A'}</span>
                         </div>
                         <div className="info-item">
                           <span className="info-label">❤️ Cardiac Rate:</span>
-                          <span className="info-value">{selectedRecord.cardiac_rate}</span>
+                          <span className="info-value">{selectedRecord.cardiac_rate || 'N/A'}</span>
                         </div>
                         <div className="info-item">
                           <span className="info-label">🩸 Blood Pressure:</span>
-                          <span className="info-value">{selectedRecord.blood_pressure}</span>
+                          <span className="info-value">{selectedRecord.blood_pressure || 'N/A'}</span>
                         </div>
-                        <div className="info-item">
-                          <span className="info-label">🗣️ Chief Complaint:</span>
-                          <span className="info-value">{selectedRecord.chief_complaint}</span>
                         </div>
-                        <div className="info-item">
-                          <span className="info-label">📖 History of Present Illness:</span>
-                          <span className="info-value">{selectedRecord.history_of_present_illness}</span>
-                        </div>
-                      </div>
+                      
                       <div className="section-divider"></div>
-                      <div className="section-header mb-2">Doctor Notes</div>
+                      <div className="section-header mb-3">Patient Information</div>
                       <div className="medical-records-grid">
-                        <div className="info-item">
-                          <span className="info-label">🩺 Assessment:</span>
-                          <span className="info-value">{selectedRecord.doctorNotes?.assessment || selectedRecord.assessment}</span>
+                        <div className="info-item full-width">
+                          <span className="info-label">🏥 Chief Complaint:</span>
+                          <span className="info-value">{selectedRecord.chief_complaint || 'N/A'}</span>
                         </div>
-                        <div className="info-item">
-                          <span className="info-label">📝 Plan:</span>
-                          <span className="info-value">{selectedRecord.doctorNotes?.plan || selectedRecord.plan}</span>
+                        <div className="info-item full-width">
+                          <span className="info-label">🧬 Patient History:</span>
+                          <span className="info-value">{selectedRecord.patient_history || 'N/A'}</span>
+                      </div>
+                        <div className="info-item full-width">
+                          <span className="info-label">📋 History of Present Illness:</span>
+                          <span className="info-value">{selectedRecord.history_of_present_illness || 'N/A'}</span>
                         </div>
                       </div>
-                    </>
+                      
+                      <div className="section-divider"></div>
+                      <div className="section-header mb-3">Medical Assessment</div>
+                      <div className="medical-records-grid">
+                        <div className="info-item full-width">
+                          <span className="info-label">🔍 Assessment:</span>
+                          <span className="info-value">{selectedRecord.assessment || 'N/A'}</span>
+                        </div>
+                        <div className="info-item full-width">
+                          <span className="info-label">📝 Plan:</span>
+                          <span className="info-value">{selectedRecord.plan || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className="no-records">Select a record to view details.</div>
                   )}
@@ -927,6 +1118,181 @@ export default function PatientList() {
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => setAddMedicalRecordModal(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Medical Record Modal */}
+      {editMedicalRecordModal && selectedPatient && (
+        <div className="modal-overlay">
+          <div className="modal-content shadow rounded">
+            <div className="modal-header d-flex justify-content-between align-items-center">
+              <h5 className="modal-title">Edit Medical Record for {selectedPatient.full_name}</h5>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setEditMedicalRecordModal(false)}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleEditMedicalRecord}>
+                <div className="section-header mb-2">Vitals</div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Temperature</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g., 37°C"
+                      name="temperature"
+                      value={recordForm.temperature || ""}
+                      onChange={handleRecordFormChange}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Weight</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g., 60kg"
+                      name="weight"
+                      value={recordForm.weight || ""}
+                      onChange={handleRecordFormChange}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Age</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g., 25"
+                      name="age"
+                      value={recordForm.age || ""}
+                      onChange={handleRecordFormChange}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Respiratory Rate</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g., 18 breaths/min"
+                      name="respiratory_rate"
+                      value={recordForm.respiratory_rate || ""}
+                      onChange={handleRecordFormChange}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Cardiac Rate</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g., 75 bpm"
+                      name="cardiac_rate"
+                      value={recordForm.cardiac_rate || ""}
+                      onChange={handleRecordFormChange}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Blood Pressure</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g., 120/80 mmHg"
+                      name="blood_pressure"
+                      value={recordForm.blood_pressure || ""}
+                      onChange={handleRecordFormChange}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Chief Complaint</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="e.g., Cough, fever"
+                      name="chief_complaint"
+                      value={recordForm.chief_complaint || ""}
+                      onChange={handleRecordFormChange}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Patient History</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    placeholder="Enter patient's medical history..."
+                    name="patient_history"
+                    value={recordForm.patient_history || ""}
+                    onChange={handleRecordFormChange}
+                  ></textarea>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">History of Present Illness</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    placeholder="Describe the history of present illness..."
+                    name="history_of_present_illness"
+                    value={recordForm.history_of_present_illness || ""}
+                    onChange={handleRecordFormChange}
+                    required
+                  ></textarea>
+                </div>
+                <div className="section-header mb-2">Doctor Notes</div>
+                <div className="mb-3">
+                  <label className="form-label">Assessment</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    placeholder="Enter doctor's assessment..."
+                    name="assessment"
+                    value={recordForm.assessment || ""}
+                    onChange={handleRecordFormChange}
+                    required
+                  ></textarea>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Plan</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    placeholder="Enter treatment plan..."
+                    name="plan"
+                    value={recordForm.plan || ""}
+                    onChange={handleRecordFormChange}
+                    required
+                  ></textarea>
+                </div>
+                <div className="modal-footer d-flex justify-content-end">
+                  <button type="submit" className="btn btn-primary me-2">
+                    <i className="bi bi-save me-1"></i> Update Record
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setEditMedicalRecordModal(false)}
                   >
                     Cancel
                   </button>

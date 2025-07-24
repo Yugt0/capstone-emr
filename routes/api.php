@@ -13,6 +13,7 @@ use App\Http\Controllers\OutcomeController;
 
 Route::apiResource('patients', PatientInformationController::class);
 Route::apiResource('patient-medical-records', PatientMedicalRecordsController::class);
+Route::get('/patient-medical-records/patient/{patientId}', [PatientMedicalRecordsController::class, 'getByPatient']);
 Route::apiResource('vaccine-lists', VaccineListController::class);
 Route::apiResource('family-planning-clients', FamilyPlanningClientController::class);
 Route::apiResource('tracker-patients', PatientController::class);

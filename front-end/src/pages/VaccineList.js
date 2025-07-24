@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import "../styles/VaccineList.css";
-import { Modal, Button, Form, Table, InputGroup, FormControl, Spinner } from "react-bootstrap";
+import { Modal, Button, Form, Table, InputGroup, FormControl, Spinner, Pagination, Dropdown } from "react-bootstrap";
 
 const API_URL = "http://127.0.0.1:8000/api/vaccine-lists";
 
@@ -13,6 +13,11 @@ const VaccineList = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
   const [newVaccine, setNewVaccine] = useState({
     date_received: "",
     product: "",
@@ -143,6 +148,29 @@ const VaccineList = () => {
     v.product.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Pagination calculations
+  const totalEntries = filteredVaccines.length;
+  const totalPages = Math.ceil(totalEntries / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentVaccines = filteredVaccines.slice(startIndex, endIndex);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, rowsPerPage]);
+
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Handle rows per page change
+  const handleRowsPerPageChange = (newRowsPerPage) => {
+    setRowsPerPage(newRowsPerPage);
+    setCurrentPage(1);
+  };
+
   return (
     <div className="main-content">
       <div className="container-fluid px-4 my-2">
@@ -154,36 +182,41 @@ const VaccineList = () => {
           </button>
         </div>
 
-        {/* Search Bar with Button */}
-        <Form
-          className="d-flex mb-3 w-50"
-          onSubmit={e => {
-            e.preventDefault();
-            setSearch(searchInput);
-          }}
-        >
-          <InputGroup>
-            <InputGroup.Text>Search</InputGroup.Text>
-            <FormControl
-              placeholder="Search vaccine..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-            <Button
-              variant="primary"
-              type="submit"
-            >
-              Search
-            </Button>
-          </InputGroup>
-        </Form>
+        {/* Enhanced Search Bar */}
+        <div className="search-container">
+          <Form
+            className="d-flex w-50"
+            onSubmit={e => {
+              e.preventDefault();
+              setSearch(searchInput);
+            }}
+          >
+            <InputGroup>
+              <InputGroup.Text>Search</InputGroup.Text>
+              <FormControl
+                placeholder="Search vaccine..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+              <Button
+                className="btn-search"
+                type="submit"
+              >
+                Search
+              </Button>
+            </InputGroup>
+          </Form>
+        </div>
 
         {loading ? (
-          <div className="text-center my-5"><Spinner animation="border" /></div>
+          <div className="loading-container">
+            <Spinner animation="border" variant="primary" />
+          </div>
         ) : error ? (
-          <div className="text-danger text-center my-5">{error}</div>
+          <div className="error-container">{error}</div>
         ) : (
-        <div className="stock-card-table shadow rounded overflow-hidden">
+        <>
+        <div className="stock-card-table">
           <div className="table-responsive">
           <Table bordered hover className="align-middle mb-0">
               <thead className="table-header">
@@ -201,24 +234,24 @@ const VaccineList = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredVaccines.length > 0 ? (
-                filteredVaccines.map((vaccine, idx) => (
+              {currentVaccines.length > 0 ? (
+                currentVaccines.map((vaccine, idx) => (
                   <tr
                     key={vaccine.id}
                     className={vaccine.remaining_balance < 50 ? "table-warning" : ""}
                   >
                     <td className="fw-semibold">{vaccine.date_received}</td>
-                    <td><div className="fw-bold data-cell">{vaccine.product}</div></td>
-                    <td className="text-end fw-semibold data-cell">{vaccine.beginning_balance}</td>
-                    <td className="text-end fw-semibold data-cell">{vaccine.delivery}</td>
-                    <td className="text-end fw-semibold data-cell negative">{vaccine.consumption}</td>
-                    <td className="text-end fw-semibold data-cell positive">{vaccine.stock_trasfer_in}</td>
-                    <td className="text-end fw-semibold data-cell negative">{vaccine.stock_trasfer_out}</td>
-                    <td className="text-end fw-semibold data-cell warning">{vaccine.expiration_date}</td>
-                    <td className="text-end fw-bold data-cell primary">{vaccine.remaining_balance}</td>
+                    <td className="fw-bold">{vaccine.product}</td>
+                    <td className="text-end fw-semibold">{vaccine.beginning_balance}</td>
+                    <td className="text-end fw-semibold">{vaccine.delivery}</td>
+                    <td className="text-end fw-semibold negative">{vaccine.consumption}</td>
+                    <td className="text-end fw-semibold positive">{vaccine.stock_trasfer_in}</td>
+                    <td className="text-end fw-semibold negative">{vaccine.stock_trasfer_out}</td>
+                    <td className="text-end fw-semibold warning">{vaccine.expiration_date}</td>
+                    <td className="text-end fw-bold primary">{vaccine.remaining_balance}</td>
                     <td className="text-center">
                       <div className="action-buttons">
-                        <button className="btn-edit" onClick={() => handleEdit(idx)} title="Edit Entry">
+                        <button className="btn-edit" onClick={() => handleEdit(startIndex + idx)} title="Edit Entry">
                           ✎
                         </button>
                         <button className="btn-delete" onClick={() => handleDelete(vaccine.id)} title="Delete Entry">
@@ -239,6 +272,77 @@ const VaccineList = () => {
           </Table>
           </div>
         </div>
+
+        {/* Enhanced Pagination Controls */}
+        {totalEntries > 0 && (
+          <div className="pagination-container">
+            <div className="d-flex justify-content-between align-items-center">
+              <div className="pagination-info">
+                <span>Show:</span>
+                <Dropdown className="entries-dropdown" onSelect={(eventKey) => handleRowsPerPageChange(parseInt(eventKey))}>
+                  <Dropdown.Toggle variant="outline-secondary" size="sm">
+                    {rowsPerPage} entries
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item eventKey="10">10 entries</Dropdown.Item>
+                    <Dropdown.Item eventKey="50">50 entries</Dropdown.Item>
+                    <Dropdown.Item eventKey="100">100 entries</Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+                <span className="text-muted">
+                  Showing {startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
+                </span>
+              </div>
+              
+              {totalPages > 1 && (
+                <Pagination className="mb-0">
+                  <Pagination.First 
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                  />
+                  <Pagination.Prev 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  />
+                  
+                  {/* Show page numbers */}
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNumber;
+                    if (totalPages <= 5) {
+                      pageNumber = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNumber = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNumber = totalPages - 4 + i;
+                    } else {
+                      pageNumber = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <Pagination.Item
+                        key={pageNumber}
+                        active={pageNumber === currentPage}
+                        onClick={() => handlePageChange(pageNumber)}
+                      >
+                        {pageNumber}
+                      </Pagination.Item>
+                    );
+                  })}
+                  
+                  <Pagination.Next 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  />
+                  <Pagination.Last 
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                  />
+                </Pagination>
+              )}
+            </div>
+          </div>
+        )}
+        </>
         )}
 
         {/* Add Vaccine Entry Modal */}

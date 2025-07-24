@@ -10,9 +10,28 @@ class PatientMedicalRecordsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $records = MedicalRecord::with('patient')->get();
+        $query = MedicalRecord::with('patient');
+        
+        // Filter by patient_id if provided
+        if ($request->has('patient_id')) {
+            $query->where('patient_id', $request->patient_id);
+        }
+        
+        $records = $query->orderBy('created_at', 'desc')->get();
+        return response()->json($records);
+    }
+
+    /**
+     * Get medical records by patient ID
+     */
+    public function getByPatient($patientId)
+    {
+        $records = MedicalRecord::where('patient_id', $patientId)
+            ->with('patient')
+            ->orderBy('created_at', 'desc')
+            ->get();
         return response()->json($records);
     }
 

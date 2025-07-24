@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\PatientMedicalRecords;
 
 class PatientInformation extends Model
 {
@@ -21,7 +22,7 @@ class PatientInformation extends Model
 
     public function medicalRecords()
     {
-        return $this->hasMany(MedicalRecord::class);
+        return $this->hasMany(PatientMedicalRecords::class, 'patient_id');
     }   
 
 }

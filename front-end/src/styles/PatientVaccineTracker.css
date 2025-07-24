@@ -159,6 +159,39 @@ tbody td {
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
+/* Make specific columns wider */
+.table-modern th:nth-child(5),
+.table-modern td:nth-child(5) {
+  min-width: 200px !important;
+  max-width: 250px !important;
+  width: 200px !important;
+  text-align: center !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+/* Make mother's name column wider too */
+.table-modern th:nth-child(7),
+.table-modern td:nth-child(7) {
+  min-width: 150px !important;
+  max-width: 200px !important;
+  width: 150px !important;
+  text-align: center !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+/* Make address column wider */
+.table-modern th:nth-child(8),
+.table-modern td:nth-child(8) {
+  min-width: 150px !important;
+  max-width: 200px !important;
+  width: 150px !important;
+  text-align: center !important;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
 .table-modern thead th {
   background: #007bff !important;
   color: white !important;
@@ -225,7 +258,6 @@ tbody td {
   border-radius: 16px;
   border: none;
   box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-  width: 1000px !important;
   max-width: none !important;
 }
 

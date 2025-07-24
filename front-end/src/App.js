@@ -26,7 +26,7 @@ function App() {
           <Header />
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/patientlist" element={<PatientList />} />
+              <Route path="/patientlist" element={<PatientList/>} />
               <Route path="/patient-vaccine-tracker" element={<PatientVaccineTracker />} />
               <Route path="/vaccinelist" element={<VaccineList />} />
               <Route path="/family-planning-list" element={<FamilyPlanningList />} />

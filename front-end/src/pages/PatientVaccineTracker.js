@@ -15,6 +15,8 @@ import {
   Form,
   InputGroup,
   FormControl,
+  Pagination,
+  Dropdown,
 } from "react-bootstrap";
 import {
   getPatients, createPatient, updatePatient, deletePatient,
@@ -305,14 +307,20 @@ export default function PatientVaccineTracker() {
   const [editRegIdx, setEditRegIdx] = useState(null);
   // Add state for edit modals and forms
   const [showNewbornEditModal, setShowNewbornEditModal] = useState(false);
-  const [newbornForm, setNewbornForm] = useState(selectedNewbornRow || {});
+  const [newbornForm, setNewbornForm] = useState({});
   const [showNutritionEditModal, setShowNutritionEditModal] = useState(false);
-  const [nutritionForm, setNutritionForm] = useState(selectedNutritionRow || {});
+  const [nutritionForm, setNutritionForm] = useState({});
   const [showOutcomesEditModal, setShowOutcomesEditModal] = useState(false);
-  const [outcomesForm, setOutcomesForm] = useState(selectedOutcomesRow || {});
+  const [outcomesForm, setOutcomesForm] = useState({});
 
-  // Set the dummy data as the default for selectedNewbornRow
-  useState(dummyNewbornRow);
+  // Search functionality state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Fetch all patients on mount
   useEffect(() => {
@@ -710,6 +718,45 @@ export default function PatientVaccineTracker() {
     }
   };
 
+  // Search functionality
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      setFilteredData([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const searchLower = searchTerm.toLowerCase().trim();
+    
+    const filtered = regData.filter(patient => {
+      const childName = (patient.child_name || '').toLowerCase();
+      const motherName = (patient.mother_name || '').toLowerCase();
+      
+      return childName.includes(searchLower) || motherName.includes(searchLower);
+    });
+
+    setFilteredData(filtered);
+    setIsSearching(false);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setFilteredData([]);
+    setIsSearching(false);
+  };
+
+  const handleSearchInputChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
   // Map backend data to frontend column structure
   const mapBackendDataToColumns = (patients) => {
     return patients.map(patient => ({
@@ -729,8 +776,36 @@ export default function PatientVaccineTracker() {
 
   const { columns, data, customHeader } =
     activePage === 0
-      ? { ...tableConfigs[0], data: mapBackendDataToColumns(regData) }
+      ? { 
+          ...tableConfigs[0], 
+          data: filteredData.length > 0 
+            ? mapBackendDataToColumns(filteredData) 
+            : mapBackendDataToColumns(regData) 
+        }
       : tableConfigs[activePage];
+
+  // Pagination calculations
+  const totalEntries = data.length;
+  const totalPages = Math.ceil(totalEntries / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const currentData = data.slice(startIndex, endIndex);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredData, rowsPerPage]);
+
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Handle rows per page change
+  const handleRowsPerPageChange = (newRowsPerPage) => {
+    setRowsPerPage(newRowsPerPage);
+    setCurrentPage(1);
+  };
 
   return (
     <Container fluid className="my-4">
@@ -745,11 +820,72 @@ export default function PatientVaccineTracker() {
               <p className="mb-0 mt-2 opacity-75">Comprehensive patient tracking and management system</p>
             </Col>
           </Row>
-          <div className="d-flex justify-content-end mb-3">
-            <Button variant="success" className="rounded-pill px-4" onClick={handleAddRegistration}>
-              <i className="bi bi-plus-circle me-2"></i> Add Patient
+          
+          {/* Search Section */}
+          <Row className="mt-4">
+            <Col md={8}>
+              <div className="d-flex gap-3 align-items-end">
+                <div className="flex-grow-1">
+                  <Form.Label className="text-white fw-semibold mb-2">
+                    <i className="bi bi-search me-2"></i>
+                    Search Patients
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search by child's name or mother's name..."
+                    value={searchTerm}
+                    onChange={handleSearchInputChange}
+                    onKeyPress={handleSearchKeyPress}
+                    className="form-control-lg border-0 shadow-sm"
+                    style={{ borderRadius: '12px' }}
+                  />
+                </div>
+                <div className="d-flex gap-2">
+                  <Button 
+                    variant="light" 
+                    className="rounded-pill px-4 py-2 fw-semibold"
+                    onClick={handleSearch}
+                    disabled={isSearching}
+                  >
+                    {isSearching ? (
+                      <>
+                        <i className="bi bi-arrow-clockwise me-2"></i>
+                        Searching...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-search me-2"></i>
+                        Search
+                      </>
+                    )}
             </Button>
+                  {filteredData.length > 0 && (
+                    <Button 
+                      variant="outline-light" 
+                      className="rounded-pill px-4 py-2 fw-semibold"
+                      onClick={handleClearSearch}
+                    >
+                      <i className="bi bi-x-circle me-2"></i>
+                      Clear
+                    </Button>
+                  )}
           </div>
+              </div>
+              {filteredData.length > 0 && (
+                <div className="mt-2">
+                  <Badge bg="light" text="dark" className="fs-6 px-3 py-2">
+                    <i className="bi bi-check-circle me-2"></i>
+                    Found {filteredData.length} result{filteredData.length !== 1 ? 's' : ''}
+                  </Badge>
+                </div>
+              )}
+            </Col>
+            <Col md={4} className="d-flex justify-content-center align-items-center">
+              <Button variant="success" className="rounded-pill px-4 py-2 fw-semibold" onClick={handleAddRegistration}>
+                <i className="bi bi-plus-circle me-2"></i> Add Patient
+              </Button>
+            </Col>
+          </Row>
         </Card.Header>
         <Card.Body className="p-4">
           <div className="table-responsive">
@@ -788,13 +924,23 @@ export default function PatientVaccineTracker() {
                 <tr>
                     <td colSpan={columns.length || 24} className="text-center text-muted py-5">
                       <div className="empty-state">
+                        {filteredData.length > 0 ? (
+                          <>
+                            <i className="bi bi-search display-4 text-muted"></i>
+                            <p className="mt-3">No patients found matching your search.</p>
+                            <p className="text-muted">Try a different search term or clear the search.</p>
+                          </>
+                        ) : (
+                          <>
                         <i className="bi bi-inbox display-4 text-muted"></i>
                         <p className="mt-3">No data available.</p>
+                          </>
+                        )}
                       </div>
                   </td>
                 </tr>
               ) : (
-                data.map((row, rIdx) => (
+                currentData.map((row, rIdx) => (
                     <tr key={rIdx} className="table-row-hover">
                     {columns.map((col, cIdx) =>
                       col === "actions" && activePage === 0 ? (
@@ -821,6 +967,130 @@ export default function PatientVaccineTracker() {
             </tbody>
           </Table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalEntries > 0 && (
+            <div className="pagination-section mt-4 p-3" style={{
+              background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+              borderRadius: '12px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+            }}>
+              <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                {/* Rows per page selector */}
+                <div className="d-flex align-items-center gap-2">
+                  <span className="text-muted fw-semibold" style={{ fontSize: '14px' }}>
+                    <i className="bi bi-list-ul me-1"></i>
+                    Rows per page:
+                  </span>
+                  <select
+                    className="form-select form-select-sm"
+                    value={rowsPerPage}
+                    onChange={(e) => handleRowsPerPageChange(parseInt(e.target.value))}
+                    style={{
+                      width: 'auto',
+                      minWidth: '80px',
+                      border: '1.5px solid #e2e8f0',
+                      borderRadius: '8px',
+                      padding: '6px 12px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      background: '#fff',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+                    }}
+                  >
+                    <option value="10">10</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                </div>
+
+                {/* Entry counter */}
+                <div className="d-flex align-items-center">
+                  <span className="text-muted fw-semibold" style={{ fontSize: '14px' }}>
+                    <i className="bi bi-info-circle me-1"></i>
+                    Showing {startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
+                  </span>
+                </div>
+
+                {/* Page navigation */}
+                <div className="d-flex align-items-center gap-2">
+                  <button
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    style={{
+                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      border: '1.5px solid #3b82f6',
+                      transition: 'all 0.2s ease',
+                      color: '#3b82f6'
+                    }}
+                  >
+                    <i className="bi bi-chevron-left me-1"></i>
+                    Previous
+                  </button>
+                  
+                  {/* Page numbers - simplified like the image */}
+                  <div className="d-flex align-items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, index) => {
+                      const pageNumber = index + 1;
+                      const isCurrentPage = pageNumber === currentPage;
+                      
+                      // Show all page numbers for simplicity (like the image)
+                      return (
+                        <button
+                          key={pageNumber}
+                          className={`btn btn-sm ${isCurrentPage ? 'btn-primary' : 'btn-outline-primary'}`}
+                          onClick={() => handlePageChange(pageNumber)}
+                          style={{
+                            borderRadius: '6px',
+                            padding: '6px 12px',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            minWidth: '36px',
+                            transition: 'all 0.2s ease',
+                            ...(isCurrentPage && {
+                              backgroundColor: '#3b82f6',
+                              borderColor: '#3b82f6',
+                              color: 'white'
+                            }),
+                            ...(!isCurrentPage && {
+                              color: '#3b82f6',
+                              borderColor: '#3b82f6',
+                              backgroundColor: 'transparent'
+                            })
+                          }}
+                        >
+                          {pageNumber}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    style={{
+                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      border: '1.5px solid #3b82f6',
+                      transition: 'all 0.2s ease',
+                      color: '#3b82f6'
+                    }}
+                  >
+                    Next
+                    <i className="bi bi-chevron-right ms-1"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </Card.Body>
       </Card>
       {/* Modal for viewing row data */}
@@ -1321,7 +1591,7 @@ export default function PatientVaccineTracker() {
         </Modal.Footer>
       </Modal>
       {/* Add/Edit Registration Modal */}
-      <Modal show={showRegModal} onHide={handleCloseRegModal} centered size="xxl" className="modal-modern" style={{ maxWidth: '90vw', width: '90vw' }}>
+      <Modal show={showRegModal} onHide={handleCloseRegModal} centered size="xxl" className="modal-modern" style={{ maxWidth: '100vw', width: '100vw' }}>
         <Modal.Header closeButton className="bg-gradient-primary text-white border-0">
           <Modal.Title className="d-flex align-items-center">
             <i className={editRegIdx !== null ? "bi bi-pencil-square me-2" : "bi bi-person-plus me-2"}></i>
