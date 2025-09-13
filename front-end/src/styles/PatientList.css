@@ -2,6 +2,24 @@
     padding: 20px;
   }
 
+  .header-section {
+    margin-bottom: 1rem;
+  }
+
+  .user-info-display {
+    margin: 0.5rem 0 0 20px;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .user-info-display i {
+    color: #3182ce;
+  }
+
+  .user-info-display strong {
+    color: #2c5aa0;
+  }
+
   .page-label {
     margin-left: 20px;
     font-weight: bold;
@@ -531,5 +549,54 @@
   flex: 1;
   margin-left: 0;
   margin-right: 0;
+}
+
+/* User Information Display */
+.user-info-small {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  border-radius: 6px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+.user-avatar-small {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.user-details-small {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-name-small {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+.user-details-small small {
+  font-size: 0.65rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
 }
 

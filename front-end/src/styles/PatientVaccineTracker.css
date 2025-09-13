@@ -261,6 +261,270 @@ tbody td {
   max-width: none !important;
 }
 
+/* Extra large modal styling for xl size */
+.modal-modern .modal-dialog {
+  max-width: 90vw !important;
+  width: 90vw !important;
+  margin: 1.75rem auto !important;
+}
+
+@media (min-width: 1200px) {
+  .modal-modern .modal-dialog {
+    max-width: 85vw !important;
+    width: 85vw !important;
+  }
+}
+
+@media (min-width: 1400px) {
+  .modal-modern .modal-dialog {
+    max-width: 80vw !important;
+    width: 80vw !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-modern .modal-dialog {
+    max-width: 95vw !important;
+    width: 95vw !important;
+    margin: 0.5rem auto !important;
+  }
+}
+
+/* Force modal centering - more specific targeting */
+.modal.modal-modern .modal-dialog {
+  display: flex !important;
+  align-items: center !important;
+  min-height: calc(100vh - 1rem) !important;
+  margin: 0.5rem auto !important;
+  justify-content: center !important;
+}
+
+.modal.modal-modern .modal-dialog-centered {
+  display: flex !important;
+  align-items: center !important;
+  min-height: calc(100vh - 1rem) !important;
+  justify-content: center !important;
+}
+
+/* Override any conflicting styles */
+.modal-modern .modal-dialog {
+  transform: none !important;
+  transition: none !important;
+}
+
+/* Modal content improvements */
+.modal-modern .modal-content {
+  border-radius: 20px !important;
+  border: none !important;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.2) !important;
+  max-height: calc(100vh - 3.5rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Ensure proper modal positioning */
+.modal-modern .modal-dialog {
+  position: relative !important;
+  width: auto !important;
+  pointer-events: none !important;
+}
+
+.modal-modern .modal-content {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  pointer-events: auto !important;
+  background-color: #fff !important;
+  background-clip: padding-box !important;
+  border: 1px solid rgba(0,0,0,.2) !important;
+  border-radius: 0.3rem !important;
+  outline: 0 !important;
+}
+
+.modal-modern .modal-body {
+  padding: 2rem !important;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-modern .modal-header {
+  border-radius: 20px 20px 0 0 !important;
+  padding: 1.5rem 2rem !important;
+  border-bottom: 1px solid #e9ecef !important;
+  flex-shrink: 0;
+}
+
+.modal-modern .modal-footer {
+  border-radius: 0 0 20px 20px !important;
+  padding: 1.5rem 2rem !important;
+  border-top: 1px solid #e9ecef !important;
+  flex-shrink: 0;
+}
+
+/* Form improvements */
+.modal-modern .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.modal-modern .form-label {
+  font-weight: 600 !important;
+  color: #495057 !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 0.95rem;
+}
+
+.modal-modern .form-control {
+  border-radius: 10px !important;
+  border: 2px solid #e9ecef !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.95rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.modal-modern .form-control:focus {
+  border-color: #007bff !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+  transform: translateY(-1px);
+}
+
+.modal-modern .form-select {
+  border-radius: 10px !important;
+  border: 2px solid #e9ecef !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.95rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.modal-modern .form-select:focus {
+  border-color: #007bff !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+}
+
+/* Section headers */
+.modal-modern h6 {
+  color: #007bff !important;
+  font-weight: 700 !important;
+  margin-bottom: 1rem !important;
+  padding-bottom: 0.5rem !important;
+  border-bottom: 2px solid #e9ecef !important;
+  font-size: 1.1rem;
+}
+
+/* Card improvements in modals */
+.modal-modern .card {
+  border-radius: 15px !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+  border: 1px solid #f1f3f4 !important;
+  margin-bottom: 1.5rem;
+}
+
+.modal-modern .card-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  border-radius: 15px 15px 0 0 !important;
+  border-bottom: 1px solid #dee2e6 !important;
+  padding: 1rem 1.5rem !important;
+}
+
+.modal-modern .card-body {
+  padding: 1.5rem !important;
+}
+
+/* Button improvements */
+.modal-modern .btn {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  padding: 0.75rem 1.5rem !important;
+  font-size: 0.95rem !important;
+  transition: all 0.3s ease !important;
+  border: none !important;
+}
+
+.modal-modern .btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+}
+
+.modal-modern .btn-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+}
+
+.modal-modern .btn-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+}
+
+.modal-modern .btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+}
+
+/* Form text improvements */
+.modal-modern .form-text {
+  font-size: 0.85rem !important;
+  margin-top: 0.5rem !important;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Medical Summary Modal Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.patient-info-container {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.patient-avatar {
+  animation: pulse 2s infinite;
+}
+
+/* Auto-suggested field styling */
+.modal-modern .form-control[style*="borderColor: #28a745"] {
+  background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%) !important;
+  border-color: #28a745 !important;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .modal-xxl {
+    max-width: 98vw !important;
+    width: 98vw !important;
+    margin: 0.5rem auto !important;
+  }
+  
+  .modal-modern .modal-body {
+    padding: 1rem !important;
+  }
+  
+  .modal-modern .modal-header,
+  .modal-modern .modal-footer {
+    padding: 1rem !important;
+  }
+}
+
 .modal-modern .modal-header {
   border-radius: 16px 16px 0 0;
   padding: 1.5rem;

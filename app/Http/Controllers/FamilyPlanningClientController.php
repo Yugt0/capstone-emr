@@ -4,13 +4,32 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\FamilyPlanningClient;
+use App\Services\AuditLogService;
 
 class FamilyPlanningClientController extends Controller
 {
     // List all clients
     public function index()
     {
-        return FamilyPlanningClient::all();
+        $clients = FamilyPlanningClient::all();
+        
+        // Log the view activity for family planning client list
+        if (auth()->check()) {
+            AuditLogService::logViewed(
+                'FamilyPlanningClient',
+                'list',
+                "Viewed family planning client list (Total: " . count($clients) . " clients)"
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Viewed',
+                'FamilyPlanningClient',
+                'list',
+                "Viewed family planning client list (Total: " . count($clients) . " clients)"
+            );
+        }
+        
+        return response()->json($clients);
     }
 
     // Store a new client
@@ -34,13 +53,51 @@ class FamilyPlanningClientController extends Controller
         $validated['follow_up'] = json_encode($validated['follow_up'] ?? []);
         $validated['deworming'] = json_encode($validated['deworming'] ?? []);
         $client = FamilyPlanningClient::create($validated);
+        
+        // Log the creation with detailed description
+        if (auth()->check()) {
+            AuditLogService::logCreated(
+                'FamilyPlanningClient',
+                $client->id,
+                "Added new family planning client: {$client->name} (Family Serial: {$client->family_serial})",
+                $client->toArray()
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Created',
+                'FamilyPlanningClient',
+                $client->id,
+                "Added new family planning client: {$client->name} (Family Serial: {$client->family_serial})",
+                null,
+                $client->toArray()
+            );
+        }
+        
         return response()->json($client, 201);
     }
 
     // Show a single client
     public function show($id)
     {
-        return FamilyPlanningClient::findOrFail($id);
+        $client = FamilyPlanningClient::findOrFail($id);
+        
+        // Log the view activity
+        if (auth()->check()) {
+            AuditLogService::logViewed(
+                'FamilyPlanningClient',
+                $id,
+                "Viewed family planning client details: {$client->name}"
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Viewed',
+                'FamilyPlanningClient',
+                $id,
+                "Viewed family planning client details: {$client->name}"
+            );
+        }
+        
+        return response()->json($client);
     }
 
     // Update a client
@@ -64,7 +121,29 @@ class FamilyPlanningClientController extends Controller
         ]);
         $validated['follow_up'] = json_encode($validated['follow_up'] ?? []);
         $validated['deworming'] = json_encode($validated['deworming'] ?? []);
+        $oldData = $client->toArray();
         $client->update($validated);
+        
+        // Log the update with detailed description
+        if (auth()->check()) {
+            AuditLogService::logUpdated(
+                'FamilyPlanningClient',
+                $id,
+                "Updated family planning client: {$client->name}",
+                $oldData,
+                $client->getChanges()
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Updated',
+                'FamilyPlanningClient',
+                $id,
+                "Updated family planning client: {$client->name}",
+                $oldData,
+                $client->getChanges()
+            );
+        }
+        
         return response()->json($client);
     }
 
@@ -72,7 +151,29 @@ class FamilyPlanningClientController extends Controller
     public function destroy($id)
     {
         $client = FamilyPlanningClient::findOrFail($id);
+        $clientName = $client->name;
+        $familySerial = $client->family_serial;
         $client->delete();
+        
+        // Log the deletion with detailed description
+        if (auth()->check()) {
+            AuditLogService::logDeleted(
+                'FamilyPlanningClient',
+                $id,
+                "Deleted family planning client: {$clientName} (Family Serial: {$familySerial})",
+                ['name' => $clientName, 'family_serial' => $familySerial, 'id' => $id]
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Deleted',
+                'FamilyPlanningClient',
+                $id,
+                "Deleted family planning client: {$clientName} (Family Serial: {$familySerial})",
+                ['name' => $clientName, 'family_serial' => $familySerial, 'id' => $id],
+                null
+            );
+        }
+        
         return response()->json(null, 204);
     }
 } 

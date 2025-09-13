@@ -1,16 +1,23 @@
 import "../styles/Login.css";
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [formData, setFormData] = useState({
     fullName: "",
     username: "",
+    email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    role: "encoder"
   });
+
+  const navigate = useNavigate();
 
   function togglePassword() {
     setShowPassword((prev) => !prev);
@@ -28,10 +35,64 @@ export default function Register() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle registration logic here
-    console.log("Registration attempt:", formData);
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    // Validate password confirmation
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          password_confirmation: formData.confirmPassword,
+          role: formData.role
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess("Registration successful! You can now login.");
+        setFormData({
+          fullName: "",
+          username: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          role: "encoder"
+        });
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      } else {
+        setError(data.message || "Registration failed");
+        if (data.errors) {
+          const errorMessages = Object.values(data.errors).flat();
+          setError(errorMessages.join(', '));
+        }
+      }
+    } catch (error) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -94,6 +155,44 @@ export default function Register() {
                     className="form-input"
                     required
                   />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="email" className="form-label">Email</label>
+                <div className="input-wrapper">
+                  <img src="images/user.png" alt="Email Icon" className="input-icon" />
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter your email"
+                    className="form-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="role" className="form-label">Role</label>
+                <div className="input-wrapper">
+                  <img src="images/user.png" alt="Role Icon" className="input-icon" />
+                  <select
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    required
+                  >
+                    <option value="encoder">Encoder</option>
+                    <option value="nursing_attendant">Nursing Attendant</option>
+                    <option value="midwife">Midwife</option>
+                    <option value="doctor">Doctor</option>
+                    <option value="cold_chain_manager">Cold Chain Manager</option>
+                  </select>
                 </div>
               </div>
 
@@ -162,9 +261,21 @@ export default function Register() {
                 </label>
               </div>
 
-              <button type="submit" className="login-button">
-                <span>Create Account</span>
-                <div className="button-loader"></div>
+              {error && (
+                <div className="alert alert-danger" role="alert">
+                  {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="alert alert-success" role="alert">
+                  {success}
+                </div>
+              )}
+
+              <button type="submit" className="login-button" disabled={loading}>
+                <span>{loading ? "Creating Account..." : "Create Account"}</span>
+                {loading && <div className="button-loader"></div>}
               </button>
             </form>
 

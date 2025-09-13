@@ -72,17 +72,17 @@ const tableConfigs = [
     customHeader: ( 
       <>
         <tr>
-          <th>No.</th>
-          <th>Date of Registration (mm/dd/yy)</th>
-          <th>Date of Birth (mm/dd/yy)</th>
-          <th>Family Serial Number</th>
-          <th>Name of Child (FN, MI, LN)</th>
-          <th>Sex (M or F)</th>
-          <th>Complete Name of Mother (FN, MI, LN)</th>
-          <th>Complete Address</th>
-          <th>TT2/TT2+ given to the mother a month prior to delivery<br/>(for mothers pregnant for the first time)<br/>(8a)</th>
-          <th>TT3/TT4/TT5 or TT1/TT1+ to TT5/TT5+ given to the mother anytime prior to delivery<br/>(8b)</th>
-          <th>Actions</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '50px', lineHeight: '1.3', fontWeight: '600' }}>No.</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '100px', lineHeight: '1.3', fontWeight: '600' }}>Reg Date</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '100px', lineHeight: '1.3', fontWeight: '600' }}>Birth Date</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '100px', lineHeight: '1.3', fontWeight: '600' }}>Family Serial #</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '120px', lineHeight: '1.3', fontWeight: '600' }}>Child Name</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '50px', lineHeight: '1.3', fontWeight: '600' }}>Sex</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '120px', lineHeight: '1.3', fontWeight: '600' }}>Mother Name</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '150px', lineHeight: '1.3', fontWeight: '600' }}>Address</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '80px', lineHeight: '1.3', fontWeight: '600' }}>TT2+ (8a)</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '80px', lineHeight: '1.3', fontWeight: '600' }}>TT3+ (8b)</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '80px', lineHeight: '1.3', fontWeight: '600' }}>Actions</th>
         </tr>
       </>
     ),
@@ -236,6 +236,17 @@ function formatDateForInput(dateStr) {
   return d.toISOString().slice(0, 10);
 }
 
+// Format date to readable format
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
 const mapRegFormToPatient = (regForm) => ({
   registration_no: regForm.col1,
   registration_date: regForm.col2,
@@ -313,6 +324,10 @@ export default function PatientVaccineTracker() {
   const [showOutcomesEditModal, setShowOutcomesEditModal] = useState(false);
   const [outcomesForm, setOutcomesForm] = useState({});
 
+  // Medical summary modal state
+  const [medicalSummaryModal, setMedicalSummaryModal] = useState(false);
+  const [selectedPatientForSummary, setSelectedPatientForSummary] = useState(null);
+
   // Search functionality state
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredData, setFilteredData] = useState([]);
@@ -326,6 +341,38 @@ export default function PatientVaccineTracker() {
   useEffect(() => {
     fetchPatients();
   }, []);
+
+  // Ensure form is populated when modal opens
+  useEffect(() => {
+    if (showNewbornEditModal && selectedNewbornRow) {
+      const formData = {
+        length_at_birth: selectedNewbornRow.length_at_birth || '',
+        col1: selectedNewbornRow.weight_at_birth || '',
+        col2: selectedNewbornRow.birth_weight_status || '',
+        col3: formatDateForInput(selectedNewbornRow.breast_feeding_date) || '',
+        col4: formatDateForInput(selectedNewbornRow.bcg_date) || '',
+        col5: formatDateForInput(selectedNewbornRow.hepa_b_bd_date) || '',
+        col6: selectedNewbornRow.age_in_months || '',
+        col7: selectedNewbornRow.length_in_threes_months || '',
+        col8: selectedNewbornRow.weight_in_threes_months || '',
+        col9: selectedNewbornRow.status || '',
+        col10: formatDateForInput(selectedNewbornRow.iron_1mo_date) || '',
+        col11: formatDateForInput(selectedNewbornRow.iron_2mo_date) || '',
+        col12: formatDateForInput(selectedNewbornRow.iron_3mo_date) || '',
+        col13: formatDateForInput(selectedNewbornRow.dpt_hib_hepb_1st) || '',
+        col14: formatDateForInput(selectedNewbornRow.dpt_hib_hepb_2nd) || '',
+        col15: formatDateForInput(selectedNewbornRow.dpt_hib_hepb_3rd) || '',
+        col16: formatDateForInput(selectedNewbornRow.opv_1st) || '',
+        col17: formatDateForInput(selectedNewbornRow.opv_2nd) || '',
+        col18: formatDateForInput(selectedNewbornRow.opv_3rd) || '',
+        col19: formatDateForInput(selectedNewbornRow.pcv_1st) || '',
+        col20: formatDateForInput(selectedNewbornRow.pcv_2nd) || '',
+        col21: formatDateForInput(selectedNewbornRow.pcv_3rd) || '',
+        col22: formatDateForInput(selectedNewbornRow.ipv_1st) || '',
+      };
+      setNewbornForm(formData);
+    }
+  }, [showNewbornEditModal, selectedNewbornRow]);
 
   const fetchPatients = async () => {
     setLoading(true);
@@ -354,7 +401,6 @@ export default function PatientVaccineTracker() {
       const newbornRes = await getNewbornImmunizationByPatient(patient.id);
       setSelectedNewbornRow(newbornRes.data);
     } catch (err) {
-      console.log('No newborn data found for patient:', patient.id);
       setSelectedNewbornRow(null);
     } finally {
       setNewbornLoading(false);
@@ -448,35 +494,41 @@ export default function PatientVaccineTracker() {
     if (selectedNewbornRow) {
       // Map backend data to frontend form structure
       const formData = {
-        length_at_birth: selectedNewbornRow.length_at_birth,
-        col1: selectedNewbornRow.weight_at_birth,
-        col2: selectedNewbornRow.birth_weight_status,
-        col3: formatDateForInput(selectedNewbornRow.breast_feeding_date),
-        col4: formatDateForInput(selectedNewbornRow.bcg_date),
-        col5: formatDateForInput(selectedNewbornRow.hepa_b_bd_date),
-        col6: selectedNewbornRow.age_in_months,
-        col7: selectedNewbornRow.length_in_threes_months,
-        col8: selectedNewbornRow.weight_in_threes_months,
-        col9: selectedNewbornRow.status,
-        col10: formatDateForInput(selectedNewbornRow.iron_1mo_date),
-        col11: formatDateForInput(selectedNewbornRow.iron_2mo_date),
-        col12: formatDateForInput(selectedNewbornRow.iron_3mo_date),
-        col13: formatDateForInput(selectedNewbornRow.dpt_hib_hepb_1st),
-        col14: formatDateForInput(selectedNewbornRow.dpt_hib_hepb_2nd),
-        col15: formatDateForInput(selectedNewbornRow.dpt_hib_hepb_3rd),
-        col16: formatDateForInput(selectedNewbornRow.opv_1st),
-        col17: formatDateForInput(selectedNewbornRow.opv_2nd),
-        col18: formatDateForInput(selectedNewbornRow.opv_3rd),
-        col19: formatDateForInput(selectedNewbornRow.pcv_1st),
-        col20: formatDateForInput(selectedNewbornRow.pcv_2nd),
-        col21: formatDateForInput(selectedNewbornRow.pcv_3rd),
-        col22: formatDateForInput(selectedNewbornRow.ipv_1st),
+        length_at_birth: selectedNewbornRow.length_at_birth || '',
+        col1: selectedNewbornRow.weight_at_birth || '',
+        col2: selectedNewbornRow.birth_weight_status || '',
+        col3: formatDateForInput(selectedNewbornRow.breast_feeding_date) || '',
+        col4: formatDateForInput(selectedNewbornRow.bcg_date) || '',
+        col5: formatDateForInput(selectedNewbornRow.hepa_b_bd_date) || '',
+        col6: selectedNewbornRow.age_in_months || '',
+        col7: selectedNewbornRow.length_in_threes_months || '',
+        col8: selectedNewbornRow.weight_in_threes_months || '',
+        col9: selectedNewbornRow.status || '',
+        col10: formatDateForInput(selectedNewbornRow.iron_1mo_date) || '',
+        col11: formatDateForInput(selectedNewbornRow.iron_2mo_date) || '',
+        col12: formatDateForInput(selectedNewbornRow.iron_3mo_date) || '',
+        col13: formatDateForInput(selectedNewbornRow.dpt_hib_hepb_1st) || '',
+        col14: formatDateForInput(selectedNewbornRow.dpt_hib_hepb_2nd) || '',
+        col15: formatDateForInput(selectedNewbornRow.dpt_hib_hepb_3rd) || '',
+        col16: formatDateForInput(selectedNewbornRow.opv_1st) || '',
+        col17: formatDateForInput(selectedNewbornRow.opv_2nd) || '',
+        col18: formatDateForInput(selectedNewbornRow.opv_3rd) || '',
+        col19: formatDateForInput(selectedNewbornRow.pcv_1st) || '',
+        col20: formatDateForInput(selectedNewbornRow.pcv_2nd) || '',
+        col21: formatDateForInput(selectedNewbornRow.pcv_3rd) || '',
+        col22: formatDateForInput(selectedNewbornRow.ipv_1st) || '',
       };
+      
       setNewbornForm(formData);
+      
+      // Use setTimeout to ensure the form is set before opening the modal
+      setTimeout(() => {
+        setShowNewbornEditModal(true);
+      }, 100);
     } else {
       setNewbornForm({});
+      setShowNewbornEditModal(true);
     }
-    setShowNewbornEditModal(true);
   };
   const handleEditNutritionSection = () => {
     if (selectedNutritionRow) {
@@ -563,9 +615,206 @@ export default function PatientVaccineTracker() {
     }
   };
 
+  // Helper function to calculate next dose date (1 month later)
+  const calculateNextDoseDate = (currentDate) => {
+    if (!currentDate) return '';
+    const date = new Date(currentDate);
+    date.setMonth(date.getMonth() + 1);
+    return date.toISOString().slice(0, 10);
+  };
+
+  // Calculate current age in months
+  const calculateAgeInMonths = (birthDate) => {
+    if (!birthDate) return 0;
+    const birth = new Date(birthDate);
+    const now = new Date();
+    const diffTime = Math.abs(now - birth);
+    const diffMonths = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 30.44)); // Average days per month
+    return diffMonths;
+  };
+
+  // Generate comprehensive medical summary
+  const generateMedicalSummary = (patient, newbornData, nutritionData, outcomesData) => {
+    const currentAge = calculateAgeInMonths(patient.birth_date);
+    
+    // Calculate current weight (from nutrition data or newborn data)
+    let currentWeight = 'Not recorded';
+    if (nutritionData && nutritionData.weight_kg_date_12) {
+      currentWeight = nutritionData.weight_kg_date_12;
+    } else if (nutritionData && nutritionData.weight_kg_date) {
+      currentWeight = nutritionData.weight_kg_date;
+    } else if (newbornData && newbornData.weight_in_threes_months) {
+      currentWeight = newbornData.weight_in_threes_months;
+    }
+
+    // Count vaccines received
+    const vaccinesReceived = [];
+    if (newbornData) {
+      if (newbornData.bcg_date) vaccinesReceived.push({ name: 'BCG', doses: 1, lastDate: newbornData.bcg_date });
+      if (newbornData.hepa_b_bd_date) vaccinesReceived.push({ name: 'Hepa B BD', doses: 1, lastDate: newbornData.hepa_b_bd_date });
+      
+      // DPT-HIB-HepB
+      let dptDoses = 0;
+      if (newbornData.dpt_hib_hepb_1st) dptDoses++;
+      if (newbornData.dpt_hib_hepb_2nd) dptDoses++;
+      if (newbornData.dpt_hib_hepb_3rd) dptDoses++;
+      if (dptDoses > 0) {
+        vaccinesReceived.push({ 
+          name: 'DPT-HIB-HepB', 
+          doses: dptDoses, 
+          lastDate: newbornData.dpt_hib_hepb_3rd || newbornData.dpt_hib_hepb_2nd || newbornData.dpt_hib_hepb_1st 
+        });
+      }
+
+      // OPV
+      let opvDoses = 0;
+      if (newbornData.opv_1st) opvDoses++;
+      if (newbornData.opv_2nd) opvDoses++;
+      if (newbornData.opv_3rd) opvDoses++;
+      if (opvDoses > 0) {
+        vaccinesReceived.push({ 
+          name: 'OPV', 
+          doses: opvDoses, 
+          lastDate: newbornData.opv_3rd || newbornData.opv_2nd || newbornData.opv_1st 
+        });
+      }
+
+      // PCV
+      let pcvDoses = 0;
+      if (newbornData.pcv_1st) pcvDoses++;
+      if (newbornData.pcv_2nd) pcvDoses++;
+      if (newbornData.pcv_3rd) pcvDoses++;
+      if (pcvDoses > 0) {
+        vaccinesReceived.push({ 
+          name: 'PCV', 
+          doses: pcvDoses, 
+          lastDate: newbornData.pcv_3rd || newbornData.pcv_2nd || newbornData.pcv_1st 
+        });
+      }
+
+      // IPV
+      if (newbornData.ipv_1st) vaccinesReceived.push({ name: 'IPV', doses: 1, lastDate: newbornData.ipv_1st });
+    }
+
+    // Additional vaccines from nutrition data
+    if (nutritionData) {
+      if (nutritionData.mmr_1st_9mo) vaccinesReceived.push({ name: 'MMR (1st)', doses: 1, lastDate: nutritionData.mmr_1st_9mo });
+      if (nutritionData.mmr_2nd_12mo) vaccinesReceived.push({ name: 'MMR (2nd)', doses: 1, lastDate: nutritionData.mmr_2nd_12mo });
+      if (nutritionData.ipv_2nd_9mo) vaccinesReceived.push({ name: 'IPV (2nd)', doses: 1, lastDate: nutritionData.ipv_2nd_9mo });
+    }
+
+    // Calculate total vaccine doses
+    const totalVaccineDoses = vaccinesReceived.reduce((sum, vaccine) => sum + vaccine.doses, 0);
+
+    // Growth status
+    let growthStatus = 'Not assessed';
+    if (nutritionData && nutritionData.status_12) {
+      growthStatus = nutritionData.status_12;
+    } else if (nutritionData && nutritionData.status) {
+      growthStatus = nutritionData.status;
+    } else if (newbornData && newbornData.status) {
+      growthStatus = newbornData.status;
+    }
+
+    // Feeding status
+    let feedingStatus = 'Not recorded';
+    if (nutritionData) {
+      const breastfed = nutritionData.exclusively_breastfed === 'Y' ? 'Yes' : 'No';
+      const complementary = nutritionData.complementary_feeding === 'Y' ? 'Yes' : 'No';
+      feedingStatus = `Exclusively breastfed: ${breastfed}, Complementary feeding: ${complementary}`;
+    }
+
+    // Health outcomes
+    let healthOutcomes = 'No outcomes recorded';
+    if (outcomesData) {
+      const outcomes = [];
+      if (outcomesData.mam_cured === 'Yes') outcomes.push('MAM Cured');
+      if (outcomesData.sam_cured === 'Yes') outcomes.push('SAM Cured');
+      if (outcomesData.mam_defaulted === 'Yes') outcomes.push('MAM Defaulted');
+      if (outcomesData.sam_defaulted === 'Yes') outcomes.push('SAM Defaulted');
+      if (outcomesData.mam_died === 'Yes') outcomes.push('MAM Died');
+      if (outcomesData.sam_died === 'Yes') outcomes.push('SAM Died');
+      
+      if (outcomes.length > 0) {
+        healthOutcomes = outcomes.join(', ');
+      } else {
+        healthOutcomes = 'No significant outcomes recorded';
+      }
+    }
+
+    return {
+      patientInfo: {
+        name: patient.child_name,
+        motherName: patient.mother_name,
+        birthDate: formatDate(patient.birth_date),
+        currentAge,
+        sex: patient.sex,
+        address: patient.address
+      },
+      currentWeight,
+      vaccinesReceived,
+      totalVaccineDoses,
+      growthStatus,
+      feedingStatus,
+      healthOutcomes,
+      lastUpdated: formatDate(patient.updated_at || patient.created_at)
+    };
+  };
+
+  // Handle medical summary
+  const handleMedicalSummary = async (rowIdx) => {
+    const patient = regData[rowIdx];
+    setSelectedPatientForSummary(patient);
+    
+    // Fetch all related data
+    try {
+      const [newbornRes, nutritionRes, outcomesRes] = await Promise.all([
+        getNewbornImmunizationByPatient(patient.id).catch(() => ({ data: null })),
+        getNutrition12MonthsByPatient(patient.id).catch(() => ({ data: null })),
+        getOutcomeByPatient(patient.id).catch(() => ({ data: null }))
+      ]);
+
+      const summary = generateMedicalSummary(
+        patient, 
+        newbornRes.data, 
+        nutritionRes.data, 
+        outcomesRes.data
+      );
+      
+      setSelectedPatientForSummary({ ...patient, summary });
+      setMedicalSummaryModal(true);
+    } catch (error) {
+      console.error('Error fetching data for summary:', error);
+      alert('Failed to load patient data for summary');
+    }
+  };
+
   // Form change handlers
   const handleNewbornFormChange = (e) => {
-    setNewbornForm({ ...newbornForm, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const updatedForm = { ...newbornForm, [name]: value };
+    
+    // Auto-schedule next doses for vaccines
+    if (name === 'col13' && value) { // DPT-HIB-HepB 1st dose
+      updatedForm.col14 = calculateNextDoseDate(value); // 2nd dose
+    }
+    if (name === 'col14' && value) { // DPT-HIB-HepB 2nd dose
+      updatedForm.col15 = calculateNextDoseDate(value); // 3rd dose
+    }
+    if (name === 'col16' && value) { // OPV 1st dose
+      updatedForm.col17 = calculateNextDoseDate(value); // 2nd dose
+    }
+    if (name === 'col17' && value) { // OPV 2nd dose
+      updatedForm.col18 = calculateNextDoseDate(value); // 3rd dose
+    }
+    if (name === 'col19' && value) { // PCV 1st dose
+      updatedForm.col20 = calculateNextDoseDate(value); // 2nd dose
+    }
+    if (name === 'col20' && value) { // PCV 2nd dose
+      updatedForm.col21 = calculateNextDoseDate(value); // 3rd dose
+    }
+    
+    setNewbornForm(updatedForm);
   };
   const handleNutritionFormChange = (e) => {
     setNutritionForm({ ...nutritionForm, [e.target.name]: e.target.value });
@@ -761,8 +1010,8 @@ export default function PatientVaccineTracker() {
   const mapBackendDataToColumns = (patients) => {
     return patients.map(patient => ({
       col1: patient.registration_no || patient.id,
-      col2: patient.registration_date,
-      col3: patient.birth_date,
+      col2: formatDate(patient.registration_date),
+      col3: formatDate(patient.birth_date),
       col4: patient.family_serial_number,
       col5: patient.child_name,
       col6: patient.sex,
@@ -843,18 +1092,48 @@ export default function PatientVaccineTracker() {
                 <div className="d-flex gap-2">
                   <Button 
                     variant="light" 
-                    className="rounded-pill px-4 py-2 fw-semibold"
+                    className="fw-semibold"
                     onClick={handleSearch}
                     disabled={isSearching}
+                    style={{
+                      background: isSearching 
+                        ? 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)'
+                        : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                      border: 'none',
+                      color: isSearching ? '#ffffff' : '#495057',
+                      borderRadius: '10px',
+                      padding: '10px 20px',
+                      fontWeight: '600',
+                      fontSize: '14px',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    onMouseOver={e => {
+                      if (!isSearching) {
+                        e.target.style.background = 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                      }
+                    }}
+                    onMouseOut={e => {
+                      if (!isSearching) {
+                        e.target.style.background = 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)';
+                        e.target.style.transform = 'none';
+                        e.target.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.1)';
+                      }
+                    }}
                   >
                     {isSearching ? (
                       <>
-                        <i className="bi bi-arrow-clockwise me-2"></i>
+                        <i className="bi bi-arrow-clockwise" style={{ fontSize: '14px' }}></i>
                         Searching...
                       </>
                     ) : (
                       <>
-                        <i className="bi bi-search me-2"></i>
+                        <i className="bi bi-search" style={{ fontSize: '14px' }}></i>
                         Search
                       </>
                     )}
@@ -862,10 +1141,36 @@ export default function PatientVaccineTracker() {
                   {filteredData.length > 0 && (
                     <Button 
                       variant="outline-light" 
-                      className="rounded-pill px-4 py-2 fw-semibold"
+                      className="fw-semibold"
                       onClick={handleClearSearch}
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                        color: 'white',
+                        borderRadius: '10px',
+                        padding: '10px 20px',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                      onMouseOver={e => {
+                        e.target.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)';
+                        e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                      }}
+                      onMouseOut={e => {
+                        e.target.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)';
+                        e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                        e.target.style.transform = 'none';
+                        e.target.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.1)';
+                      }}
                     >
-                      <i className="bi bi-x-circle me-2"></i>
+                      <i className="bi bi-x-circle" style={{ fontSize: '14px' }}></i>
                       Clear
                     </Button>
                   )}
@@ -881,20 +1186,58 @@ export default function PatientVaccineTracker() {
               )}
             </Col>
             <Col md={4} className="d-flex justify-content-center align-items-center">
-              <Button variant="success" className="rounded-pill px-4 py-2 fw-semibold" onClick={handleAddRegistration}>
-                <i className="bi bi-plus-circle me-2"></i> Add Patient
+              <Button 
+                variant="success" 
+                className="fw-semibold" 
+                onClick={handleAddRegistration}
+                style={{
+                  background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '12px',
+                  padding: '12px 24px',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(40, 167, 69, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onMouseOver={e => {
+                  e.target.style.background = 'linear-gradient(135deg, #20c997 0%, #1e7e34 100%)';
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(40, 167, 69, 0.4)';
+                }}
+                onMouseOut={e => {
+                  e.target.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                  e.target.style.transform = 'none';
+                  e.target.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
+                }}
+              >
+                <i className="bi bi-plus-circle" style={{ fontSize: '16px' }}></i> 
+                Add Patient
               </Button>
             </Col>
           </Row>
         </Card.Header>
         <Card.Body className="p-4">
-          <div className="table-responsive">
-            <Table bordered hover className="table-modern mb-0">
-              <thead className="table-header-gradient">
+          <div className="table-responsive" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+            <Table bordered hover className="table-modern mb-0" style={{ fontSize: '11px' }}>
+              <thead className="table-header-gradient" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
               {customHeader ? customHeader : (
                 <tr>
                   {columns.map((col, idx) => (
-                      <th key={idx} className="text-white border-0">
+                      <th key={idx} className="text-white border-0" style={{ 
+                        fontSize: '10px', 
+                        padding: '6px 4px',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '140px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        lineHeight: '1.3',
+                        fontWeight: '600'
+                      }}>
                         {col === "actions" ? "Actions" : col}
                       </th>
                   ))}
@@ -944,21 +1287,177 @@ export default function PatientVaccineTracker() {
                     <tr key={rIdx} className="table-row-hover">
                     {columns.map((col, cIdx) =>
                       col === "actions" && activePage === 0 ? (
-                          <td key={cIdx} className="text-center align-middle py-3">
-                            <div className="table-actions">
-                              <Button size="sm" variant="outline-primary" className="icon-btn mb-1" onClick={() => handleView(rIdx)} title="View">
-                                <i className="bi bi-eye"></i>
+                          <td key={cIdx} className="text-center align-middle" style={{ 
+                            padding: '6px 4px',
+                            fontSize: '11px'
+                          }}>
+                            <div className="table-actions" style={{
+                              display: 'flex',
+                              gap: '4px',
+                              flexWrap: 'nowrap',
+                              justifyContent: 'center',
+                              alignItems: 'center'
+                            }}>
+                              <Button 
+                                size="sm" 
+                                variant="outline-primary" 
+                                className="icon-btn" 
+                                onClick={() => handleView(rIdx)} 
+                                title="View Details"
+                                style={{
+                                  background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
+                                  border: 'none',
+                                  color: 'white',
+                                  width: '60px',
+                                  fontSize: '10px',
+                                  padding: '4px 6px',
+                                  borderRadius: '6px',
+                                  fontWeight: '600',
+                                  transition: 'all 0.3s ease',
+                                  whiteSpace: 'nowrap',
+                                  boxShadow: '0 2px 6px rgba(23, 162, 184, 0.3)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '2px'
+                                }}
+                                onMouseOver={e => {
+                                  e.target.style.background = 'linear-gradient(135deg, #138496 0%, #117a8b 100%)';
+                                  e.target.style.transform = 'translateY(-2px)';
+                                  e.target.style.boxShadow = '0 4px 12px rgba(23, 162, 184, 0.4)';
+                                }}
+                                onMouseOut={e => {
+                                  e.target.style.background = 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)';
+                                  e.target.style.transform = 'none';
+                                  e.target.style.boxShadow = '0 2px 6px rgba(23, 162, 184, 0.3)';
+                                }}
+                              >
+                                <i className="bi bi-eye" style={{ fontSize: '10px' }}></i>
+                                <span>View</span>
                           </Button>
-                              <Button size="sm" variant="outline-primary" className="icon-btn mb-1" onClick={() => handleEdit(rIdx)} title="Edit">
-                                <i className="bi bi-pencil-square"></i>
+                              <Button 
+                                size="sm" 
+                                variant="outline-primary" 
+                                className="icon-btn" 
+                                onClick={() => handleEdit(rIdx)} 
+                                title="Edit Patient"
+                                style={{
+                                  background: 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)',
+                                  border: 'none',
+                                  color: 'white',
+                                  width: '60px',
+                                  fontSize: '10px',
+                                  padding: '4px 6px',
+                                  borderRadius: '6px',
+                                  fontWeight: '600',
+                                  transition: 'all 0.3s ease',
+                                  whiteSpace: 'nowrap',
+                                  boxShadow: '0 2px 6px rgba(255, 193, 7, 0.3)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '2px'
+                                }}
+                                onMouseOver={e => {
+                                  e.target.style.background = 'linear-gradient(135deg, #e0a800 0%, #d39e00 100%)';
+                                  e.target.style.transform = 'translateY(-2px)';
+                                  e.target.style.boxShadow = '0 4px 12px rgba(255, 193, 7, 0.4)';
+                                }}
+                                onMouseOut={e => {
+                                  e.target.style.background = 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)';
+                                  e.target.style.transform = 'none';
+                                  e.target.style.boxShadow = '0 2px 6px rgba(255, 193, 7, 0.3)';
+                                }}
+                              >
+                                <i className="bi bi-pencil-square" style={{ fontSize: '10px' }}></i>
+                                <span>Edit</span>
                           </Button>
-                              <Button size="sm" variant="outline-danger" className="icon-btn" onClick={() => handleDelete(rIdx)} title="Delete">
-                                <i className="bi bi-trash"></i>
+                              <Button 
+                                size="sm" 
+                                variant="outline-info" 
+                                className="icon-btn" 
+                                onClick={() => handleMedicalSummary(rIdx)} 
+                                title="Medical Summary"
+                                style={{
+                                  background: 'linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%)',
+                                  border: 'none',
+                                  color: 'white',
+                                  width: '60px',
+                                  fontSize: '10px',
+                                  padding: '4px 6px',
+                                  borderRadius: '6px',
+                                  fontWeight: '600',
+                                  transition: 'all 0.3s ease',
+                                  whiteSpace: 'nowrap',
+                                  boxShadow: '0 2px 6px rgba(111, 66, 193, 0.3)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '2px'
+                                }}
+                                onMouseOver={e => {
+                                  e.target.style.background = 'linear-gradient(135deg, #5a32a3 0%, #4c2a8a 100%)';
+                                  e.target.style.transform = 'translateY(-2px)';
+                                  e.target.style.boxShadow = '0 4px 12px rgba(111, 66, 193, 0.4)';
+                                }}
+                                onMouseOut={e => {
+                                  e.target.style.background = 'linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%)';
+                                  e.target.style.transform = 'none';
+                                  e.target.style.boxShadow = '0 2px 6px rgba(111, 66, 193, 0.3)';
+                                }}
+                              >
+                                <i className="bi bi-file-medical" style={{ fontSize: '10px' }}></i>
+                                <span>Summary</span>
+                          </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline-danger" 
+                                className="icon-btn" 
+                                onClick={() => handleDelete(rIdx)} 
+                                title="Delete Patient"
+                                style={{
+                                  background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
+                                  border: 'none',
+                                  color: 'white',
+                                  width: '60px',
+                                  fontSize: '10px',
+                                  padding: '4px 6px',
+                                  borderRadius: '6px',
+                                  fontWeight: '600',
+                                  transition: 'all 0.3s ease',
+                                  whiteSpace: 'nowrap',
+                                  boxShadow: '0 2px 6px rgba(220, 53, 69, 0.3)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '2px'
+                                }}
+                                onMouseOver={e => {
+                                  e.target.style.background = 'linear-gradient(135deg, #c82333 0%, #bd2130 100%)';
+                                  e.target.style.transform = 'translateY(-2px)';
+                                  e.target.style.boxShadow = '0 4px 12px rgba(220, 53, 69, 0.4)';
+                                }}
+                                onMouseOut={e => {
+                                  e.target.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                                  e.target.style.transform = 'none';
+                                  e.target.style.boxShadow = '0 2px 6px rgba(220, 53, 69, 0.3)';
+                                }}
+                              >
+                                <i className="bi bi-trash" style={{ fontSize: '10px' }}></i>
+                                <span>Delete</span>
                           </Button>
                             </div>
                         </td>
                       ) : (
-                        <td key={cIdx} className="py-3">{row[col] || ""}</td>
+                        <td key={cIdx} style={{ 
+                          padding: '6px 4px',
+                          fontSize: '11px',
+                          maxWidth: '140px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          lineHeight: '1.3'
+                        }} title={row[col] || ""}>{row[col] || ""}</td>
                       )
                     )}
                   </tr>
@@ -1014,7 +1513,7 @@ export default function PatientVaccineTracker() {
                 </div>
 
                 {/* Page navigation */}
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex align-items-center gap-2" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
                   <button
                     className="btn btn-outline-primary btn-sm"
                     onClick={() => handlePageChange(currentPage - 1)}
@@ -1033,18 +1532,51 @@ export default function PatientVaccineTracker() {
                     Previous
                   </button>
                   
-                  {/* Page numbers - simplified like the image */}
-                  <div className="d-flex align-items-center gap-1">
-                    {Array.from({ length: totalPages }, (_, index) => {
-                      const pageNumber = index + 1;
-                      const isCurrentPage = pageNumber === currentPage;
+                  {/* Smart pagination with ellipsis */}
+                  <div className="d-flex align-items-center gap-1" style={{ flexWrap: 'nowrap', overflow: 'hidden' }}>
+                    {(() => {
+                      const pages = [];
+                      const maxVisiblePages = 7; // Show max 7 page numbers
+                      const halfVisible = Math.floor(maxVisiblePages / 2);
                       
-                      // Show all page numbers for simplicity (like the image)
-                      return (
+                      // Always show first page
+                      pages.push(
                         <button
-                          key={pageNumber}
+                          key={1}
+                          className={`btn btn-sm ${1 === currentPage ? 'btn-primary' : 'btn-outline-primary'}`}
+                          onClick={() => handlePageChange(1)}
+                          style={{
+                            borderRadius: '6px',
+                            padding: '6px 12px',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            minWidth: '36px',
+                            transition: 'all 0.2s ease',
+                            ...(1 === currentPage && {
+                              backgroundColor: '#3b82f6',
+                              borderColor: '#3b82f6',
+                              color: 'white'
+                            }),
+                            ...(1 !== currentPage && {
+                              color: '#3b82f6',
+                              borderColor: '#3b82f6',
+                              backgroundColor: 'transparent'
+                            })
+                          }}
+                        >
+                          1
+                        </button>
+                      );
+                      
+                      if (totalPages <= maxVisiblePages) {
+                        // Show all pages if total is small
+                        for (let i = 2; i <= totalPages - 1; i++) {
+                          const isCurrentPage = i === currentPage;
+                          pages.push(
+                            <button
+                              key={i}
                           className={`btn btn-sm ${isCurrentPage ? 'btn-primary' : 'btn-outline-primary'}`}
-                          onClick={() => handlePageChange(pageNumber)}
+                              onClick={() => handlePageChange(i)}
                           style={{
                             borderRadius: '6px',
                             padding: '6px 12px',
@@ -1064,10 +1596,107 @@ export default function PatientVaccineTracker() {
                             })
                           }}
                         >
-                          {pageNumber}
+                              {i}
                         </button>
                       );
-                    })}
+                        }
+                      } else {
+                        // Smart pagination with ellipsis
+                        let startPage = Math.max(2, currentPage - halfVisible);
+                        let endPage = Math.min(totalPages - 1, currentPage + halfVisible);
+                        
+                        // Adjust if we're near the beginning or end
+                        if (currentPage <= halfVisible) {
+                          endPage = Math.min(totalPages - 1, maxVisiblePages - 1);
+                        }
+                        if (currentPage >= totalPages - halfVisible) {
+                          startPage = Math.max(2, totalPages - maxVisiblePages + 2);
+                        }
+                        
+                        // Add ellipsis after first page if needed
+                        if (startPage > 2) {
+                          pages.push(
+                            <span key="ellipsis1" className="px-2 text-muted" style={{ fontSize: '13px' }}>
+                              ...
+                            </span>
+                          );
+                        }
+                        
+                        // Add middle pages
+                        for (let i = startPage; i <= endPage; i++) {
+                          const isCurrentPage = i === currentPage;
+                          pages.push(
+                            <button
+                              key={i}
+                              className={`btn btn-sm ${isCurrentPage ? 'btn-primary' : 'btn-outline-primary'}`}
+                              onClick={() => handlePageChange(i)}
+                              style={{
+                                borderRadius: '6px',
+                                padding: '6px 12px',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                                minWidth: '36px',
+                                transition: 'all 0.2s ease',
+                                ...(isCurrentPage && {
+                                  backgroundColor: '#3b82f6',
+                                  borderColor: '#3b82f6',
+                                  color: 'white'
+                                }),
+                                ...(!isCurrentPage && {
+                                  color: '#3b82f6',
+                                  borderColor: '#3b82f6',
+                                  backgroundColor: 'transparent'
+                                })
+                              }}
+                            >
+                              {i}
+                            </button>
+                          );
+                        }
+                        
+                        // Add ellipsis before last page if needed
+                        if (endPage < totalPages - 1) {
+                          pages.push(
+                            <span key="ellipsis2" className="px-2 text-muted" style={{ fontSize: '13px' }}>
+                              ...
+                            </span>
+                          );
+                        }
+                      }
+                      
+                      // Always show last page (if more than 1 page)
+                      if (totalPages > 1) {
+                        pages.push(
+                          <button
+                            key={totalPages}
+                            className={`btn btn-sm ${totalPages === currentPage ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => handlePageChange(totalPages)}
+                            style={{
+                              borderRadius: '6px',
+                              padding: '6px 12px',
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              minWidth: '36px',
+                              transition: 'all 0.2s ease',
+                              ...(totalPages === currentPage && {
+                                backgroundColor: '#3b82f6',
+                                borderColor: '#3b82f6',
+                                color: 'white'
+                              }),
+                              ...(totalPages !== currentPage && {
+                                color: '#3b82f6',
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'transparent'
+                              })
+                            }}
+                          >
+                            {totalPages}
+                          </button>
+                        );
+                      }
+                      
+                      return pages;
+                    })()}
                   </div>
                   
                   <button
@@ -1087,6 +1716,41 @@ export default function PatientVaccineTracker() {
                     Next
                     <i className="bi bi-chevron-right ms-1"></i>
                   </button>
+                  
+                  {/* Quick page input for large datasets */}
+                  {totalPages > 10 && (
+                    <div className="d-flex align-items-center gap-2 ms-3">
+                      <span className="text-muted small">Go to:</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max={totalPages}
+                        value={currentPage}
+                        onChange={(e) => {
+                          const page = parseInt(e.target.value);
+                          if (page >= 1 && page <= totalPages) {
+                            handlePageChange(page);
+                          }
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            const page = parseInt(e.target.value);
+                            if (page >= 1 && page <= totalPages) {
+                              handlePageChange(page);
+                            }
+                          }
+                        }}
+                        style={{
+                          width: '60px',
+                          padding: '4px 8px',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          textAlign: 'center'
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1102,7 +1766,7 @@ export default function PatientVaccineTracker() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
-          <div className="p-4">
+          <div className="p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
             <ButtonGroup className="mb-4 w-100 shadow-sm rounded-pill">
               <Button
                 variant={activeModalSection === 'newborn' ? 'primary' : 'outline-primary'}
@@ -1134,16 +1798,91 @@ export default function PatientVaccineTracker() {
               <div>
                 <div className="d-flex justify-content-end mb-3">
                   {newbornLoading ? (
-                    <Button size="sm" variant="outline-secondary" disabled className="rounded-pill px-4">
-                      <i className="bi bi-arrow-clockwise me-2"></i> Loading...
+                    <Button 
+                      size="sm" 
+                      variant="outline-secondary" 
+                      disabled 
+                      style={{
+                        background: 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)',
+                        border: 'none',
+                        color: 'white',
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        fontWeight: '600',
+                        fontSize: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <i className="bi bi-arrow-clockwise" style={{ fontSize: '12px' }}></i> 
+                      Loading...
                     </Button>
                   ) : selectedNewbornRow ? (
-                    <Button size="sm" variant="outline-primary" onClick={handleEditNewborn} className="rounded-pill px-4">
-                      <i className="bi bi-pencil-square me-2"></i> Edit
+                    <Button 
+                      size="sm" 
+                      variant="outline-primary" 
+                      onClick={handleEditNewborn}
+                      style={{
+                        background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+                        border: 'none',
+                        color: 'white',
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        fontWeight: '600',
+                        fontSize: '12px',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 2px 6px rgba(0, 123, 255, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                      onMouseOver={e => {
+                        e.target.style.background = 'linear-gradient(135deg, #0056b3 0%, #004085 100%)';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 4px 10px rgba(0, 123, 255, 0.4)';
+                      }}
+                      onMouseOut={e => {
+                        e.target.style.background = 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)';
+                        e.target.style.transform = 'none';
+                        e.target.style.boxShadow = '0 2px 6px rgba(0, 123, 255, 0.3)';
+                      }}
+                    >
+                      <i className="bi bi-pencil-square" style={{ fontSize: '12px' }}></i> 
+                      Edit
                     </Button>
                   ) : (
-                    <Button size="sm" variant="outline-success" onClick={handleEditNewborn} className="rounded-pill px-4">
-                      <i className="bi bi-plus-circle me-2"></i> Add
+                    <Button 
+                      size="sm" 
+                      variant="outline-success" 
+                      onClick={handleEditNewborn}
+                      style={{
+                        background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                        border: 'none',
+                        color: 'white',
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        fontWeight: '600',
+                        fontSize: '12px',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 2px 6px rgba(40, 167, 69, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                      onMouseOver={e => {
+                        e.target.style.background = 'linear-gradient(135deg, #20c997 0%, #1e7e34 100%)';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 4px 10px rgba(40, 167, 69, 0.4)';
+                      }}
+                      onMouseOut={e => {
+                        e.target.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                        e.target.style.transform = 'none';
+                        e.target.style.boxShadow = '0 2px 6px rgba(40, 167, 69, 0.3)';
+                      }}
+                    >
+                      <i className="bi bi-plus-circle" style={{ fontSize: '12px' }}></i> 
+                      Add
                     </Button>
                   )}
                 </div>
@@ -1584,8 +2323,35 @@ export default function PatientVaccineTracker() {
           </div>
         </Modal.Body>
         <Modal.Footer className="bg-light border-0">
-          <Button variant="secondary" onClick={() => setShowModal(false)} className="rounded-pill px-4">
-            <i className="bi bi-x-circle me-2"></i>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowModal(false)}
+            style={{
+              background: 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)',
+              border: 'none',
+              color: 'white',
+              borderRadius: '10px',
+              padding: '10px 20px',
+              fontWeight: '600',
+              fontSize: '14px',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 3px 10px rgba(108, 117, 125, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            onMouseOver={e => {
+              e.target.style.background = 'linear-gradient(135deg, #5a6268 0%, #495057 100%)';
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 4px 12px rgba(108, 117, 125, 0.4)';
+            }}
+            onMouseOut={e => {
+              e.target.style.background = 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)';
+              e.target.style.transform = 'none';
+              e.target.style.boxShadow = '0 3px 10px rgba(108, 117, 125, 0.3)';
+            }}
+          >
+            <i className="bi bi-x-circle" style={{ fontSize: '14px' }}></i>
             Close
           </Button>
         </Modal.Footer>
@@ -1711,11 +2477,62 @@ export default function PatientVaccineTracker() {
               </div>
             </div>
             <div className="d-flex justify-content-end mt-4 gap-3">
-              <Button variant="secondary" onClick={handleCloseRegModal} className="rounded-pill px-4">
+              <Button 
+                variant="secondary" 
+                onClick={handleCloseRegModal}
+                style={{
+                  background: 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '10px',
+                  padding: '12px 24px',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 3px 10px rgba(108, 117, 125, 0.3)'
+                }}
+                onMouseOver={e => {
+                  e.target.style.background = 'linear-gradient(135deg, #5a6268 0%, #495057 100%)';
+                  e.target.style.transform = 'translateY(-1px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(108, 117, 125, 0.4)';
+                }}
+                onMouseOut={e => {
+                  e.target.style.background = 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)';
+                  e.target.style.transform = 'none';
+                  e.target.style.boxShadow = '0 3px 10px rgba(108, 117, 125, 0.3)';
+                }}
+              >
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" className="rounded-pill px-4">
-                <i className="bi bi-check-circle me-2"></i>
+              <Button 
+                type="submit" 
+                variant="primary"
+                style={{
+                  background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '10px',
+                  padding: '12px 24px',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(0, 123, 255, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onMouseOver={e => {
+                  e.target.style.background = 'linear-gradient(135deg, #0056b3 0%, #004085 100%)';
+                  e.target.style.transform = 'translateY(-1px)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(0, 123, 255, 0.4)';
+                }}
+                onMouseOut={e => {
+                  e.target.style.background = 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)';
+                  e.target.style.transform = 'none';
+                  e.target.style.boxShadow = '0 4px 15px rgba(0, 123, 255, 0.3)';
+                }}
+              >
+                <i className="bi bi-check-circle" style={{ fontSize: '16px' }}></i>
                 {editRegIdx !== null ? 'Update' : 'Save'}
               </Button>
             </div>
@@ -1723,7 +2540,7 @@ export default function PatientVaccineTracker() {
         </Modal.Body>
       </Modal>
       {/* Edit Newborn Modal */}
-      <Modal show={showNewbornEditModal} onHide={() => setShowNewbornEditModal(false)} centered size="xxl" className="modal-modern" style={{ maxWidth: '90vw', width: '90vw' }}>
+      <Modal show={showNewbornEditModal} onHide={() => setShowNewbornEditModal(false)} centered size="xl" className="modal-modern">
         <Modal.Header closeButton className="bg-gradient-primary text-white border-0">
           <Modal.Title className="d-flex align-items-center">
             <i className="bi bi-baby me-2"></i>
@@ -1731,23 +2548,33 @@ export default function PatientVaccineTracker() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
-          <Form onSubmit={handleNewbornFormSubmit}>
+          <Form onSubmit={handleNewbornFormSubmit} key={JSON.stringify(newbornForm)}>
             <div className="row">
               {/* Growth Assessment */}
               <div className="col-12 mb-4">
-                <h6 className="text-primary fw-bold mb-3">
-                  <i className="bi bi-graph-up me-2"></i>
-                  Growth Assessment
-                </h6>
+                <div className="card border-0 shadow-sm">
+                  <div className="card-header bg-light">
+                    <h6 className="text-primary fw-bold mb-0">
+                      <i className="bi bi-graph-up me-2"></i>
+                      Growth Assessment
+                    </h6>
+                  </div>
+                  <div className="card-body">
                 <div className="row">
                   <div className="col-md-6">
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">Length at birth (cm)</Form.Label>
                       <Form.Control 
                         name="length_at_birth"
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="200"
                         value={newbornForm.length_at_birth || newbornForm.col_length_at_birth || ''}
                         onChange={handleNewbornFormChange}
                         className="form-control-modern"
+                        placeholder="e.g., 50.5"
+                        key={`length_at_birth_${newbornForm.length_at_birth}`}
                       />
                     </Form.Group>
                   </div>
@@ -1756,9 +2583,15 @@ export default function PatientVaccineTracker() {
                       <Form.Label className="fw-semibold">Weight at birth (kg)</Form.Label>
                       <Form.Control 
                         name="col1" 
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="99.99"
                         value={newbornForm.col1 || ''} 
                         onChange={handleNewbornFormChange}
                         className="form-control-modern"
+                        placeholder="e.g., 3.2"
+                        key={`col1_${newbornForm.col1}`}
                       />
                     </Form.Group>
                   </div>
@@ -1791,14 +2624,20 @@ export default function PatientVaccineTracker() {
                     </Form.Group>
                   </div>
                 </div>
+                  </div>
+                </div>
               </div>
 
               {/* Immunization */}
               <div className="col-12 mb-4">
-                <h6 className="text-primary fw-bold mb-3">
-                  <i className="bi bi-capsule me-2"></i>
-                  Immunization
-                </h6>
+                <div className="card border-0 shadow-sm">
+                  <div className="card-header bg-light">
+                    <h6 className="text-primary fw-bold mb-0">
+                      <i className="bi bi-capsule me-2"></i>
+                      Immunization
+                    </h6>
+                  </div>
+                  <div className="card-body">
                 <div className="row">
                   <div className="col-md-6">
                     <Form.Group className="mb-3">
@@ -1825,23 +2664,33 @@ export default function PatientVaccineTracker() {
                     </Form.Group>
                   </div>
                 </div>
+                  </div>
+                </div>
               </div>
 
               {/* Nutritional Status Assessment */}
               <div className="col-12 mb-4">
-                <h6 className="text-primary fw-bold mb-3">
-                  <i className="bi bi-heart-pulse me-2"></i>
-                  Nutritional Status Assessment
-                </h6>
+                <div className="card border-0 shadow-sm">
+                  <div className="card-header bg-light">
+                    <h6 className="text-primary fw-bold mb-0">
+                      <i className="bi bi-heart-pulse me-2"></i>
+                      Nutritional Status Assessment
+                    </h6>
+                  </div>
+                  <div className="card-body">
                 <div className="row">
                   <div className="col-md-4">
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">Age in months</Form.Label>
                       <Form.Control 
                         name="col6" 
+                        type="number"
+                        min="0"
+                        max="36"
                         value={newbornForm.col6 || ''} 
                         onChange={handleNewbornFormChange}
                         className="form-control-modern"
+                        placeholder="e.g., 3"
                       />
                     </Form.Group>
                   </div>
@@ -1888,14 +2737,20 @@ export default function PatientVaccineTracker() {
                     </Form.Group>
                   </div>
                 </div>
+                  </div>
+                </div>
               </div>
 
               {/* Low birth weight given Iron */}
               <div className="col-12 mb-4">
-                <h6 className="text-primary fw-bold mb-3">
-                  <i className="bi bi-droplet me-2"></i>
-                  Low birth weight given Iron (Write the date)
-                </h6>
+                <div className="card border-0 shadow-sm">
+                  <div className="card-header bg-light">
+                    <h6 className="text-primary fw-bold mb-0">
+                      <i className="bi bi-droplet me-2"></i>
+                      Low birth weight given Iron (Write the date)
+                    </h6>
+                  </div>
+                  <div className="card-body">
                 <div className="row">
                   <div className="col-md-4">
                     <Form.Group className="mb-3">
@@ -1934,14 +2789,21 @@ export default function PatientVaccineTracker() {
                     </Form.Group>
                   </div>
                 </div>
+                  </div>
+                </div>
               </div>
 
               {/* 1-3 months old Immunization */}
               <div className="col-12 mb-4">
-                <h6 className="text-primary fw-bold mb-3">
-                  <i className="bi bi-shield-plus me-2"></i>
-                  1-3 months old Immunization
-                </h6>
+                <div className="card border-0 shadow-sm">
+                  <div className="card-header bg-light">
+                    <h6 className="text-primary fw-bold mb-0">
+                      <i className="bi bi-shield-plus me-2"></i>
+                      1-3 months old Immunization
+                    </h6>
+                    <small className="text-muted">Auto-scheduling: Next doses will be suggested 1 month after each previous dose</small>
+                  </div>
+                  <div className="card-body">
                 <div className="row">
                   <div className="col-md-6">
                     <h6 className="text-info fw-semibold mb-3">DPT-HIB-HepB</h6>
@@ -1955,7 +2817,12 @@ export default function PatientVaccineTracker() {
                             value={newbornForm.col13 || ''} 
                             onChange={handleNewbornFormChange}
                             className="form-control-modern"
+                            placeholder="Enter first dose date"
                           />
+                          <Form.Text className="text-muted small">
+                            <i className="bi bi-info-circle me-1"></i>
+                            Next dose will be auto-scheduled
+                          </Form.Text>
                         </Form.Group>
                       </div>
                       <div className="col-md-4">
@@ -1967,7 +2834,14 @@ export default function PatientVaccineTracker() {
                             value={newbornForm.col14 || ''} 
                             onChange={handleNewbornFormChange}
                             className="form-control-modern"
+                            style={newbornForm.col13 && !newbornForm.col14 ? { borderColor: '#28a745', backgroundColor: '#f8fff9' } : {}}
                           />
+                          {newbornForm.col13 && !newbornForm.col14 && (
+                            <Form.Text className="text-success small">
+                              <i className="bi bi-calendar-check me-1"></i>
+                              Auto-suggested based on 1st dose
+                            </Form.Text>
+                          )}
                         </Form.Group>
                       </div>
                       <div className="col-md-4">
@@ -1979,7 +2853,14 @@ export default function PatientVaccineTracker() {
                             value={newbornForm.col15 || ''} 
                             onChange={handleNewbornFormChange}
                             className="form-control-modern"
+                            style={newbornForm.col14 && !newbornForm.col15 ? { borderColor: '#28a745', backgroundColor: '#f8fff9' } : {}}
                           />
+                          {newbornForm.col14 && !newbornForm.col15 && (
+                            <Form.Text className="text-success small">
+                              <i className="bi bi-calendar-check me-1"></i>
+                              Auto-suggested based on 2nd dose
+                            </Form.Text>
+                          )}
                         </Form.Group>
                       </div>
                     </div>
@@ -1996,7 +2877,12 @@ export default function PatientVaccineTracker() {
                             value={newbornForm.col16 || ''} 
                             onChange={handleNewbornFormChange}
                             className="form-control-modern"
+                            placeholder="Enter first dose date"
                           />
+                          <Form.Text className="text-muted small">
+                            <i className="bi bi-info-circle me-1"></i>
+                            Next dose will be auto-scheduled
+                          </Form.Text>
                         </Form.Group>
                       </div>
                       <div className="col-md-4">
@@ -2008,7 +2894,14 @@ export default function PatientVaccineTracker() {
                             value={newbornForm.col17 || ''} 
                             onChange={handleNewbornFormChange}
                             className="form-control-modern"
+                            style={newbornForm.col16 && !newbornForm.col17 ? { borderColor: '#28a745', backgroundColor: '#f8fff9' } : {}}
                           />
+                          {newbornForm.col16 && !newbornForm.col17 && (
+                            <Form.Text className="text-success small">
+                              <i className="bi bi-calendar-check me-1"></i>
+                              Auto-suggested based on 1st dose
+                            </Form.Text>
+                          )}
                         </Form.Group>
                       </div>
                       <div className="col-md-4">
@@ -2020,7 +2913,14 @@ export default function PatientVaccineTracker() {
                             value={newbornForm.col18 || ''} 
                             onChange={handleNewbornFormChange}
                             className="form-control-modern"
+                            style={newbornForm.col17 && !newbornForm.col18 ? { borderColor: '#28a745', backgroundColor: '#f8fff9' } : {}}
                           />
+                          {newbornForm.col17 && !newbornForm.col18 && (
+                            <Form.Text className="text-success small">
+                              <i className="bi bi-calendar-check me-1"></i>
+                              Auto-suggested based on 2nd dose
+                            </Form.Text>
+                          )}
                         </Form.Group>
                       </div>
                     </div>
@@ -2039,7 +2939,12 @@ export default function PatientVaccineTracker() {
                             value={newbornForm.col19 || ''} 
                             onChange={handleNewbornFormChange}
                             className="form-control-modern"
+                            placeholder="Enter first dose date"
                           />
+                          <Form.Text className="text-muted small">
+                            <i className="bi bi-info-circle me-1"></i>
+                            Next dose will be auto-scheduled
+                          </Form.Text>
                         </Form.Group>
                       </div>
                       <div className="col-md-4">
@@ -2051,7 +2956,14 @@ export default function PatientVaccineTracker() {
                             value={newbornForm.col20 || ''} 
                             onChange={handleNewbornFormChange}
                             className="form-control-modern"
+                            style={newbornForm.col19 && !newbornForm.col20 ? { borderColor: '#28a745', backgroundColor: '#f8fff9' } : {}}
                           />
+                          {newbornForm.col19 && !newbornForm.col20 && (
+                            <Form.Text className="text-success small">
+                              <i className="bi bi-calendar-check me-1"></i>
+                              Auto-suggested based on 1st dose
+                            </Form.Text>
+                          )}
                         </Form.Group>
                       </div>
                       <div className="col-md-4">
@@ -2063,7 +2975,14 @@ export default function PatientVaccineTracker() {
                             value={newbornForm.col21 || ''} 
                             onChange={handleNewbornFormChange}
                             className="form-control-modern"
+                            style={newbornForm.col20 && !newbornForm.col21 ? { borderColor: '#28a745', backgroundColor: '#f8fff9' } : {}}
                           />
+                          {newbornForm.col20 && !newbornForm.col21 && (
+                            <Form.Text className="text-success small">
+                              <i className="bi bi-calendar-check me-1"></i>
+                              Auto-suggested based on 2nd dose
+                            </Form.Text>
+                          )}
                         </Form.Group>
                       </div>
                     </div>
@@ -2080,10 +2999,17 @@ export default function PatientVaccineTracker() {
                             value={newbornForm.col22 || ''} 
                             onChange={handleNewbornFormChange}
                             className="form-control-modern"
+                            placeholder="Enter IPV dose date"
                           />
+                          <Form.Text className="text-muted small">
+                            <i className="bi bi-info-circle me-1"></i>
+                            Single dose vaccine
+                          </Form.Text>
                         </Form.Group>
                       </div>
                     </div>
+                  </div>
+                </div>
                   </div>
                 </div>
               </div>
@@ -2101,7 +3027,7 @@ export default function PatientVaccineTracker() {
         </Modal.Body>
       </Modal>
       {/* Edit Nutrition & 12 Months Modal */}
-      <Modal show={showNutritionEditModal} onHide={() => setShowNutritionEditModal(false)} centered size="xxl" className="modal-modern" style={{ maxWidth: '90vw', width: '90vw' }}>
+      <Modal show={showNutritionEditModal} onHide={() => setShowNutritionEditModal(false)} centered size="xl" className="modal-modern">
         <Modal.Header closeButton className="bg-gradient-primary text-white border-0">
           <Modal.Title className="d-flex align-items-center">
             <i className={selectedNutritionRow ? "bi bi-pencil-square me-2" : "bi bi-plus-circle me-2"}></i>
@@ -2420,7 +3346,7 @@ export default function PatientVaccineTracker() {
         </Modal.Body>
       </Modal>
       {/* Edit Outcomes & Remarks Modal */}
-      <Modal show={showOutcomesEditModal} onHide={() => setShowOutcomesEditModal(false)} centered size="xxl" className="modal-modern" style={{ maxWidth: '90vw', width: '90vw' }}>
+      <Modal show={showOutcomesEditModal} onHide={() => setShowOutcomesEditModal(false)} centered size="xl" className="modal-modern">
         <Modal.Header closeButton className="bg-gradient-primary text-white border-0">
           <Modal.Title className="d-flex align-items-center">
             <i className="bi bi-clipboard-check me-2"></i>
@@ -2605,6 +3531,292 @@ export default function PatientVaccineTracker() {
             </div>
           </Form>
         </Modal.Body>
+      </Modal>
+
+      {/* Medical Summary Modal */}
+      <Modal show={medicalSummaryModal} onHide={() => setMedicalSummaryModal(false)} centered size="xl" className="modal-modern">
+        <Modal.Header closeButton className="bg-gradient-primary text-white border-0">
+          <Modal.Title className="d-flex align-items-center">
+            <i className="bi bi-file-medical me-3"></i>
+            Medical Summary
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0">
+          <div className="p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+            {selectedPatientForSummary && selectedPatientForSummary.summary ? (
+              <div className="row g-4">
+                {/* Patient Header Section */}
+                <div className="col-12">
+                  <div className="patient-info-container" style={{
+                    background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                    borderRadius: '16px',
+                    padding: '2rem',
+                    border: '1px solid #dee2e6',
+                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
+                    animation: 'fadeInUp 0.6s ease-out'
+                  }}>
+                    <div className="d-flex align-items-center mb-3">
+                      <div className="patient-avatar me-3" style={{
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        boxShadow: '0 4px 12px rgba(23, 162, 184, 0.3)'
+                      }}>
+                        {selectedPatientForSummary.summary.patientInfo.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h4 className="mb-1 fw-bold text-primary" style={{ animation: 'pulse 2s infinite' }}>
+                          {selectedPatientForSummary.summary.patientInfo.name}
+                        </h4>
+                        <p className="text-muted mb-0">
+                          <i className="bi bi-person me-1"></i>
+                          Child of {selectedPatientForSummary.summary.patientInfo.motherName}
+                        </p>
+                        <p className="text-muted mb-0 small">
+                          <i className="bi bi-calendar me-1"></i>
+                          Last updated: {selectedPatientForSummary.summary.lastUpdated}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Patient Details Section */}
+                <div className="col-12">
+                  <div className="row g-4">
+                    {/* Personal Information */}
+                    <div className="col-md-6">
+                      <div className="card border-0 shadow-sm h-100" style={{
+                        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                        borderRadius: '12px',
+                        border: '1px solid #e9ecef'
+                      }}>
+                        <div className="card-header bg-light border-0 rounded-top-3">
+                          <h6 className="mb-0 text-primary fw-bold">
+                            <i className="bi bi-person-circle me-2"></i>
+                            Personal Information
+                          </h6>
+                        </div>
+                        <div className="card-body p-4">
+                          <div className="row g-3">
+                            <div className="col-6">
+                              <div className="info-item">
+                                <small className="text-muted fw-semibold d-block">Current Age</small>
+                                <div className="fw-bold fs-5 text-primary">
+                                  {selectedPatientForSummary.summary.patientInfo.currentAge} months
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-6">
+                              <div className="info-item">
+                                <small className="text-muted fw-semibold d-block">Sex</small>
+                                <div className="fw-bold fs-5">
+                                  <Badge bg={selectedPatientForSummary.summary.patientInfo.sex === 'M' ? 'primary' : 'danger'} className="fs-6 px-3 py-2">
+                                    {selectedPatientForSummary.summary.patientInfo.sex === 'M' ? 'Male' : 'Female'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-12">
+                              <div className="info-item">
+                                <small className="text-muted fw-semibold d-block">Birth Date</small>
+                                <div className="fw-bold fs-6">{selectedPatientForSummary.summary.patientInfo.birthDate}</div>
+                              </div>
+                            </div>
+                            <div className="col-12">
+                              <div className="info-item">
+                                <small className="text-muted fw-semibold d-block">Address</small>
+                                <div className="fw-bold fs-6">{selectedPatientForSummary.summary.patientInfo.address}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Health Status */}
+                    <div className="col-md-6">
+                      <div className="card border-0 shadow-sm h-100" style={{
+                        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                        borderRadius: '12px',
+                        border: '1px solid #e9ecef'
+                      }}>
+                        <div className="card-header bg-light border-0 rounded-top-3">
+                          <h6 className="mb-0 text-primary fw-bold">
+                            <i className="bi bi-heart-pulse me-2"></i>
+                            Health Status
+                          </h6>
+                        </div>
+                        <div className="card-body p-4">
+                          <div className="row g-3">
+                            <div className="col-12">
+                              <div className="info-item">
+                                <small className="text-muted fw-semibold d-block">Current Weight</small>
+                                <div className="fw-bold fs-5 text-success">
+                                  {selectedPatientForSummary.summary.currentWeight}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-12">
+                              <div className="info-item">
+                                <small className="text-muted fw-semibold d-block">Growth Status</small>
+                                <div className="fw-bold">
+                                  <Badge 
+                                    bg={
+                                      selectedPatientForSummary.summary.growthStatus === 'N' ? 'success' :
+                                      selectedPatientForSummary.summary.growthStatus === 'S' ? 'warning' :
+                                      selectedPatientForSummary.summary.growthStatus === 'W-MAM' ? 'warning' :
+                                      selectedPatientForSummary.summary.growthStatus === 'W-SAM' ? 'danger' :
+                                      selectedPatientForSummary.summary.growthStatus === 'O' ? 'info' : 'secondary'
+                                    } 
+                                    className="fs-6 px-3 py-2"
+                                  >
+                                    {selectedPatientForSummary.summary.growthStatus}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-12">
+                              <div className="info-item">
+                                <small className="text-muted fw-semibold d-block">Feeding Status</small>
+                                <div className="fw-bold fs-6 text-info">{selectedPatientForSummary.summary.feedingStatus}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Vaccination Summary */}
+                    <div className="col-12">
+                      <div className="card border-0 shadow-sm" style={{
+                        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                        borderRadius: '12px',
+                        border: '1px solid #e9ecef'
+                      }}>
+                        <div className="card-header bg-light border-0 rounded-top-3">
+                          <h6 className="mb-0 text-primary fw-bold">
+                            <i className="bi bi-shield-check me-2"></i>
+                            Vaccination Summary
+                          </h6>
+                        </div>
+                        <div className="card-body p-4">
+                          <div className="row mb-3">
+                            <div className="col-md-6">
+                              <div className="text-center p-3 bg-primary text-white rounded-3">
+                                <h3 className="mb-1 fw-bold">{selectedPatientForSummary.summary.totalVaccineDoses}</h3>
+                                <small>Total Vaccine Doses</small>
+                              </div>
+                            </div>
+                            <div className="col-md-6">
+                              <div className="text-center p-3 bg-success text-white rounded-3">
+                                <h3 className="mb-1 fw-bold">{selectedPatientForSummary.summary.vaccinesReceived.length}</h3>
+                                <small>Vaccine Types Received</small>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {selectedPatientForSummary.summary.vaccinesReceived.length > 0 ? (
+                            <div className="row g-3">
+                              {selectedPatientForSummary.summary.vaccinesReceived.map((vaccine, index) => (
+                                <div key={index} className="col-md-6 col-lg-4">
+                                  <div className="p-3 border rounded-3 bg-white h-100">
+                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                      <h6 className="mb-0 text-primary fw-bold">{vaccine.name}</h6>
+                                      <Badge bg="success" className="fs-6 px-2 py-1">
+                                        {vaccine.doses} dose{vaccine.doses !== 1 ? 's' : ''}
+                                      </Badge>
+                                    </div>
+                                    <small className="text-muted">
+                                      <i className="bi bi-calendar me-1"></i>
+                                      Last: {formatDate(vaccine.lastDate)}
+                                    </small>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-4">
+                              <i className="bi bi-exclamation-circle text-muted display-4"></i>
+                              <p className="text-muted mt-3">No vaccination records found</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Health Outcomes */}
+                    <div className="col-12">
+                      <div className="card border-0 shadow-sm" style={{
+                        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                        borderRadius: '12px',
+                        border: '1px solid #e9ecef'
+                      }}>
+                        <div className="card-header bg-light border-0 rounded-top-3">
+                          <h6 className="mb-0 text-primary fw-bold">
+                            <i className="bi bi-clipboard-check me-2"></i>
+                            Health Outcomes
+                          </h6>
+                        </div>
+                        <div className="card-body p-4">
+                          <div className="info-item">
+                            <small className="text-muted fw-semibold d-block">Outcomes Summary</small>
+                            <div className="fw-bold fs-6 text-info">{selectedPatientForSummary.summary.healthOutcomes}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-5">
+                <i className="bi bi-arrow-clockwise text-muted display-4"></i>
+                <p className="text-muted mt-3 fs-5">Loading medical summary...</p>
+              </div>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="bg-light border-0">
+          <Button 
+            variant="secondary" 
+            onClick={() => setMedicalSummaryModal(false)}
+            style={{
+              background: 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)',
+              border: 'none',
+              color: 'white',
+              borderRadius: '10px',
+              padding: '10px 20px',
+              fontWeight: '600',
+              fontSize: '14px',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 3px 10px rgba(108, 117, 125, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            onMouseOver={e => {
+              e.target.style.background = 'linear-gradient(135deg, #5a6268 0%, #495057 100%)';
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 4px 12px rgba(108, 117, 125, 0.4)';
+            }}
+            onMouseOut={e => {
+              e.target.style.background = 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)';
+              e.target.style.transform = 'none';
+              e.target.style.boxShadow = '0 3px 10px rgba(108, 117, 125, 0.3)';
+            }}
+          >
+            <i className="bi bi-x-circle" style={{ fontSize: '14px' }}></i>
+            Close
+          </Button>
+        </Modal.Footer>
       </Modal>
     </Container>
   );

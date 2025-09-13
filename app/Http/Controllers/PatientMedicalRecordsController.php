@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PatientMedicalRecords as MedicalRecord;
+use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 
 class PatientMedicalRecordsController extends Controller
@@ -49,6 +50,26 @@ class PatientMedicalRecordsController extends Controller
     public function store(Request $request)
     {
         $record = MedicalRecord::create($request->all());
+        
+        // Log the creation with detailed description
+        if (auth()->check()) {
+            AuditLogService::logCreated(
+                'PatientMedicalRecords',
+                $record->id,
+                "Added new medical record for patient ID: {$record->patient_id}",
+                $record->toArray()
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Created',
+                'PatientMedicalRecords',
+                $record->id,
+                "Added new medical record for patient ID: {$record->patient_id}",
+                null,
+                $record->toArray()
+            );
+        }
+        
         return response()->json($record, 201);
     }
 
@@ -75,7 +96,29 @@ class PatientMedicalRecordsController extends Controller
     public function update(Request $request, $id)
     {
         $record = MedicalRecord::findOrFail($id);
+        $oldData = $record->toArray();
         $record->update($request->all());
+        
+        // Log the update with detailed description
+        if (auth()->check()) {
+            AuditLogService::logUpdated(
+                'PatientMedicalRecords',
+                $id,
+                "Updated medical record for patient ID: {$record->patient_id}",
+                $oldData,
+                $record->getChanges()
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Updated',
+                'PatientMedicalRecords',
+                $id,
+                "Updated medical record for patient ID: {$record->patient_id}",
+                $oldData,
+                $record->getChanges()
+            );
+        }
+        
         return response()->json($record);
     }
 
@@ -85,7 +128,28 @@ class PatientMedicalRecordsController extends Controller
     public function destroy($id)
     {
         $record = MedicalRecord::findOrFail($id);
+        $patientId = $record->patient_id;
         $record->delete();
+        
+        // Log the deletion with detailed description
+        if (auth()->check()) {
+            AuditLogService::logDeleted(
+                'PatientMedicalRecords',
+                $id,
+                "Deleted medical record for patient ID: {$patientId}",
+                ['patient_id' => $patientId, 'record_id' => $id]
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Deleted',
+                'PatientMedicalRecords',
+                $id,
+                "Deleted medical record for patient ID: {$patientId}",
+                ['patient_id' => $patientId, 'record_id' => $id],
+                null
+            );
+        }
+        
         return response()->json(null, 204);
     }
 }

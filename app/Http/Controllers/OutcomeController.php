@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Outcome;
 use Illuminate\Http\Request;
+use App\Services\AuditLogService;
 
 class OutcomeController extends Controller
 {
@@ -13,7 +14,25 @@ class OutcomeController extends Controller
     public function index()
     {
         try {
-            return response()->json(Outcome::with('patient')->get())
+            $outcomes = Outcome::with('patient')->get();
+            
+            // Log the view activity for outcomes list
+            if (auth()->check()) {
+                AuditLogService::logViewed(
+                    'Outcome',
+                    'list',
+                    "Viewed outcomes list (Total: " . count($outcomes) . " records)"
+                );
+            } else {
+                AuditLogService::logSystemActivity(
+                    'Viewed',
+                    'Outcome',
+                    'list',
+                    "Viewed outcomes list (Total: " . count($outcomes) . " records)"
+                );
+            }
+            
+            return response()->json($outcomes)
                 ->header('Access-Control-Allow-Origin', '*')
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
                 ->header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization, Accept, Origin');
@@ -49,6 +68,25 @@ class OutcomeController extends Controller
             
             $outcome = Outcome::create($data);
             
+            // Log the creation with detailed description
+            if (auth()->check()) {
+                AuditLogService::logCreated(
+                    'Outcome',
+                    $outcome->id,
+                    "Added new outcome record for patient ID: {$outcome->patient_id}",
+                    $outcome->toArray()
+                );
+            } else {
+                AuditLogService::logSystemActivity(
+                    'Created',
+                    'Outcome',
+                    $outcome->id,
+                    "Added new outcome record for patient ID: {$outcome->patient_id}",
+                    null,
+                    $outcome->toArray()
+                );
+            }
+            
             \Log::info('Outcome record created successfully:', $outcome->toArray());
             
             return response()->json($outcome, 201)
@@ -74,7 +112,25 @@ class OutcomeController extends Controller
     public function show($id)
     {
         try {
-            return response()->json(Outcome::with('patient')->findOrFail($id))
+            $outcome = Outcome::with('patient')->findOrFail($id);
+            
+            // Log the view activity
+            if (auth()->check()) {
+                AuditLogService::logViewed(
+                    'Outcome',
+                    $id,
+                    "Viewed outcome record for patient ID: {$outcome->patient_id}"
+                );
+            } else {
+                AuditLogService::logSystemActivity(
+                    'Viewed',
+                    'Outcome',
+                    $id,
+                    "Viewed outcome record for patient ID: {$outcome->patient_id}"
+                );
+            }
+            
+            return response()->json($outcome)
                 ->header('Access-Control-Allow-Origin', '*')
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
                 ->header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization, Accept, Origin');
@@ -96,6 +152,7 @@ class OutcomeController extends Controller
             \Log::info('Outcome update request data:', $request->all());
             
             $outcome = Outcome::findOrFail($id);
+            $oldData = $outcome->toArray();
             
             // Get all data and clean it up
             $data = $request->all();
@@ -111,6 +168,26 @@ class OutcomeController extends Controller
             \Log::info('Cleaned outcome data for update:', $data);
             
             $outcome->update($data);
+            
+            // Log the update with detailed description
+            if (auth()->check()) {
+                AuditLogService::logUpdated(
+                    'Outcome',
+                    $id,
+                    "Updated outcome record for patient ID: {$outcome->patient_id}",
+                    $oldData,
+                    $outcome->getChanges()
+                );
+            } else {
+                AuditLogService::logSystemActivity(
+                    'Updated',
+                    'Outcome',
+                    $id,
+                    "Updated outcome record for patient ID: {$outcome->patient_id}",
+                    $oldData,
+                    $outcome->getChanges()
+                );
+            }
             
             \Log::info('Outcome record updated successfully:', $outcome->toArray());
             
@@ -138,7 +215,28 @@ class OutcomeController extends Controller
     {
         try {
             $outcome = Outcome::findOrFail($id);
+            $patientId = $outcome->patient_id;
             $outcome->delete();
+            
+            // Log the deletion with detailed description
+            if (auth()->check()) {
+                AuditLogService::logDeleted(
+                    'Outcome',
+                    $id,
+                    "Deleted outcome record for patient ID: {$patientId}",
+                    ['patient_id' => $patientId, 'record_id' => $id]
+                );
+            } else {
+                AuditLogService::logSystemActivity(
+                    'Deleted',
+                    'Outcome',
+                    $id,
+                    "Deleted outcome record for patient ID: {$patientId}",
+                    ['patient_id' => $patientId, 'record_id' => $id],
+                    null
+                );
+            }
+            
             return response()->json(null, 204)
                 ->header('Access-Control-Allow-Origin', '*')
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')

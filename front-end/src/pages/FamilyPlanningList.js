@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Table, Button, Modal, Form, Row, Col, InputGroup, FormControl, Pagination, Card, Badge } from "react-bootstrap";
 import "../styles/Modal.css";
 
-const API_URL = "http://localhost:8000/api/family-planning-clients";
+const API_URL = "http://127.0.0.1:8000/api/family-planning-clients";
 
 const initialForm = {
   registrationDate: "",
@@ -397,14 +397,31 @@ export default function FamilyPlanningList() {
                       variant="primary" 
                       type="submit"
                       style={{ 
-                        borderRadius: '0 20px 20px 0',
-                        padding: '8px 20px',
                         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                         border: 'none',
-                        fontSize: '0.9rem'
+                        color: 'white',
+                        borderRadius: '0 20px 20px 0',
+                        padding: '8px 20px',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 3px 10px rgba(102, 126, 234, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                      onMouseOver={e => {
+                        e.target.style.background = 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)';
+                        e.target.style.transform = 'translateY(-1px)';
+                        e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+                      }}
+                      onMouseOut={e => {
+                        e.target.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                        e.target.style.transform = 'none';
+                        e.target.style.boxShadow = '0 3px 10px rgba(102, 126, 234, 0.3)';
                       }}
                     >
-                      <i className="bi bi-search me-2"></i>
+                      <i className="bi bi-search" style={{ fontSize: '14px' }}></i>
                       Search
                     </Button>
           </InputGroup>
@@ -416,16 +433,31 @@ export default function FamilyPlanningList() {
                   size="md"
             onClick={() => openModal(null, null)}
                   style={{ 
-                    borderRadius: '20px',
-                    padding: '8px 20px',
-                    background: 'linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%)',
+                    background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
                     border: 'none',
-                    fontWeight: 600,
-                    boxShadow: '0 2px 8px rgba(86, 171, 47, 0.3)',
-                    fontSize: '0.9rem'
+                    color: 'white',
+                    borderRadius: '12px',
+                    padding: '12px 24px',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 15px rgba(40, 167, 69, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseOver={e => {
+                    e.target.style.background = 'linear-gradient(135deg, #20c997 0%, #17a2b8 100%)';
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 6px 20px rgba(40, 167, 69, 0.4)';
+                  }}
+                  onMouseOut={e => {
+                    e.target.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                    e.target.style.transform = 'none';
+                    e.target.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
                   }}
                 >
-                  <i className="bi bi-plus-circle me-2"></i>
+                  <i className="bi bi-plus-circle" style={{ fontSize: '16px' }}></i>
                   Add New Client
           </Button>
               </Col>
@@ -629,20 +661,47 @@ export default function FamilyPlanningList() {
                             <small className="text-muted">{c.remarks}</small>
                           </td>
                           <td>
-                            <div className="d-flex gap-1">
+                            <div className="d-flex gap-2" style={{
+                              justifyContent: 'center',
+                              alignItems: 'center'
+                            }}>
+                              <style>
+                                {`
+                                  .action-buttons button:hover {
+                                    transform: translateY(-2px);
+                                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+                                  }
+                                  .action-buttons button:active {
+                                    transform: translateY(0);
+                                  }
+                                `}
+                              </style>
                               <Button 
                                 size="sm" 
                                 variant="outline-primary" 
                                 onClick={() => openModal(c, startIndex + idx)} 
                                 title="Edit"
                                 style={{ 
-                                  borderRadius: '8px',
+                                  background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+                                  border: 'none',
+                                  color: 'white',
+                                  width: '80px',
+                                  fontSize: '11px',
                                   padding: '6px 10px',
-                                  border: '1px solid #007bff',
-                                  color: '#007bff'
+                                  borderRadius: '8px',
+                                  fontWeight: '600',
+                                  transition: 'all 0.3s ease',
+                                  whiteSpace: 'nowrap',
+                                  boxShadow: '0 2px 6px rgba(0, 123, 255, 0.3)',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '4px'
                                 }}
                               >
-                        <i className="bi bi-pencil-square"></i>
+                        <i className="bi bi-pencil-square" style={{ fontSize: '12px' }}></i>
+                        <span>Edit</span>
                               </Button>
                               <Button 
                                 size="sm" 
@@ -650,13 +709,26 @@ export default function FamilyPlanningList() {
                                 onClick={() => handleDelete(startIndex + idx)} 
                                 title="Delete"
                                 style={{ 
-                                  borderRadius: '8px',
+                                  background: 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)',
+                                  border: 'none',
+                                  color: 'white',
+                                  width: '80px',
+                                  fontSize: '11px',
                                   padding: '6px 10px',
-                                  border: '1px solid #dc3545',
-                                  color: '#dc3545'
+                                  borderRadius: '8px',
+                                  fontWeight: '600',
+                                  transition: 'all 0.3s ease',
+                                  whiteSpace: 'nowrap',
+                                  boxShadow: '0 2px 6px rgba(220, 53, 69, 0.3)',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '4px'
                                 }}
                               >
-                        <i className="bi bi-trash"></i>
+                        <i className="bi bi-trash" style={{ fontSize: '12px' }}></i>
+                        <span>Delete</span>
                       </Button>
                             </div>
                     </td>
@@ -1013,22 +1085,63 @@ export default function FamilyPlanningList() {
             <Button 
               variant="secondary" 
               onClick={() => setShowModal(false)}
-              style={{ borderRadius: '8px', padding: '8px 20px' }}
+              style={{ 
+                background: 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)',
+                border: 'none',
+                color: 'white',
+                borderRadius: '10px',
+                padding: '10px 20px',
+                fontWeight: '600',
+                fontSize: '14px',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 3px 10px rgba(108, 117, 125, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              onMouseOver={e => {
+                e.target.style.background = 'linear-gradient(135deg, #5a6268 0%, #495057 100%)';
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 4px 15px rgba(108, 117, 125, 0.4)';
+              }}
+              onMouseOut={e => {
+                e.target.style.background = 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)';
+                e.target.style.transform = 'none';
+                e.target.style.boxShadow = '0 3px 10px rgba(108, 117, 125, 0.3)';
+              }}
             >
-              <i className="bi bi-x-circle me-2"></i>
+              <i className="bi bi-x-circle" style={{ fontSize: '14px' }}></i>
             Cancel
           </Button>
             <Button 
               variant="primary" 
               onClick={handleSave}
               style={{ 
-                borderRadius: '8px', 
-                padding: '8px 20px',
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                border: 'none'
+                border: 'none',
+                color: 'white',
+                borderRadius: '10px',
+                padding: '10px 20px',
+                fontWeight: '600',
+                fontSize: '14px',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 3px 10px rgba(102, 126, 234, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              onMouseOver={e => {
+                e.target.style.background = 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)';
+                e.target.style.transform = 'translateY(-1px)';
+                e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+              }}
+              onMouseOut={e => {
+                e.target.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                e.target.style.transform = 'none';
+                e.target.style.boxShadow = '0 3px 10px rgba(102, 126, 234, 0.3)';
               }}
             >
-              <i className="bi bi-check-circle me-2"></i>
+              <i className="bi bi-check-circle" style={{ fontSize: '14px' }}></i>
               Save Changes
           </Button>
         </Modal.Footer>

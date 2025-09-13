@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('patient_id')->constrained('patient_information')->onDelete('cascade');
             $table->string('temperature')->nullable();
             $table->text('patient_history')->nullable();
-            $table->integer('age')->nullable();
+            $table->string('age')->nullable();
             $table->string('respiratory_rate')->nullable();
             $table->text('chief_complaint')->nullable();
             $table->string('cardiac_rate')->nullable();

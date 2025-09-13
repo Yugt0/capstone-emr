@@ -4,12 +4,31 @@ namespace App\Http\Controllers;
 
 use App\Models\NewbornImmunization;
 use Illuminate\Http\Request;
+use App\Services\AuditLogService;
 
 class NewbornImmunizationController extends Controller
 {
     public function index()
     {
-        return response()->json(NewbornImmunization::with('patient')->get())
+        $newbornImmunizations = NewbornImmunization::with('patient')->get();
+        
+        // Log the view activity for newborn immunizations list
+        if (auth()->check()) {
+            AuditLogService::logViewed(
+                'NewbornImmunization',
+                'list',
+                "Viewed newborn immunizations list (Total: " . count($newbornImmunizations) . " records)"
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Viewed',
+                'NewbornImmunization',
+                'list',
+                "Viewed newborn immunizations list (Total: " . count($newbornImmunizations) . " records)"
+            );
+        }
+        
+        return response()->json($newbornImmunizations)
             ->header('Access-Control-Allow-Origin', '*')
             ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
             ->header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization, Accept, Origin');
@@ -17,28 +36,143 @@ class NewbornImmunizationController extends Controller
 
     public function store(Request $request)
     {
-        $record = NewbornImmunization::create($request->all());
-        return response()->json($record, 201)
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-            ->header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization, Accept, Origin');
+        try {
+            // Log the incoming data for debugging
+            \Log::info('Newborn store request data:', $request->all());
+            
+            // Clean and validate the data
+            $data = $this->cleanNewbornData($request->all());
+            
+            $record = NewbornImmunization::create($data);
+        
+        // Log the creation with detailed description
+        if (auth()->check()) {
+            AuditLogService::logCreated(
+                'NewbornImmunization',
+                $record->id,
+                "Added new newborn immunization record for patient ID: {$record->patient_id}",
+                $record->toArray()
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Created',
+                'NewbornImmunization',
+                $record->id,
+                "Added new newborn immunization record for patient ID: {$record->patient_id}",
+                null,
+                $record->toArray()
+            );
+        }
+        
+            return response()->json($record, 201)
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization, Accept, Origin');
+        } catch (\Exception $e) {
+            \Log::error('Newborn store error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json(['error' => $e->getMessage()], 500)
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization, Accept, Origin');
+        }
     }
 
     public function show($id)
     {
-        return NewbornImmunization::with('patient')->findOrFail($id);
+        $record = NewbornImmunization::with('patient')->findOrFail($id);
+        
+        // Log the view activity
+        if (auth()->check()) {
+            AuditLogService::logViewed(
+                'NewbornImmunization',
+                $id,
+                "Viewed newborn immunization record for patient ID: {$record->patient_id}"
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Viewed',
+                'NewbornImmunization',
+                $id,
+                "Viewed newborn immunization record for patient ID: {$record->patient_id}"
+            );
+        }
+        
+        return response()->json($record);
     }
 
     public function update(Request $request, $id)
     {
-        $record = NewbornImmunization::findOrFail($id);
-        $record->update($request->all());
-        return response()->json($record, 200);
+        try {
+            // Log the incoming data for debugging
+            \Log::info('Newborn update request data:', $request->all());
+            
+            // Clean and validate the data
+            $data = $this->cleanNewbornData($request->all());
+            
+            $record = NewbornImmunization::findOrFail($id);
+            $oldData = $record->toArray();
+            $record->update($data);
+        
+        // Log the update with detailed description
+        if (auth()->check()) {
+            AuditLogService::logUpdated(
+                'NewbornImmunization',
+                $id,
+                "Updated newborn immunization record for patient ID: {$record->patient_id}",
+                $oldData,
+                $record->getChanges()
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Updated',
+                'NewbornImmunization',
+                $id,
+                "Updated newborn immunization record for patient ID: {$record->patient_id}",
+                $oldData,
+                $record->getChanges()
+            );
+        }
+        
+            return response()->json($record, 200);
+        } catch (\Exception $e) {
+            \Log::error('Newborn update error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy($id)
     {
-        NewbornImmunization::destroy($id);
+        $record = NewbornImmunization::findOrFail($id);
+        $patientId = $record->patient_id;
+        $record->delete();
+        
+        // Log the deletion with detailed description
+        if (auth()->check()) {
+            AuditLogService::logDeleted(
+                'NewbornImmunization',
+                $id,
+                "Deleted newborn immunization record for patient ID: {$patientId}",
+                ['patient_id' => $patientId, 'record_id' => $id]
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Deleted',
+                'NewbornImmunization',
+                $id,
+                "Deleted newborn immunization record for patient ID: {$patientId}",
+                ['patient_id' => $patientId, 'record_id' => $id],
+                null
+            );
+        }
+        
         return response()->json(null, 204);
     }
 
@@ -59,5 +193,73 @@ class NewbornImmunizationController extends Controller
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
                 ->header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization, Accept, Origin');
         }
+    }
+    
+    /**
+     * Clean and validate newborn data
+     */
+    private function cleanNewbornData($data)
+    {
+        // Clean weight_at_birth - remove any non-numeric characters and ensure it's a valid decimal
+        if (isset($data['weight_at_birth']) && $data['weight_at_birth'] !== null) {
+            $weight = $data['weight_at_birth'];
+            // Remove any non-numeric characters except decimal point
+            $weight = preg_replace('/[^0-9.]/', '', $weight);
+            // Convert to float and ensure it's within valid range (0-99.99)
+            $weight = floatval($weight);
+            if ($weight > 99.99) {
+                $weight = 99.99; // Cap at maximum allowed value
+            }
+            $data['weight_at_birth'] = $weight > 0 ? $weight : null;
+        }
+        
+        // Clean length_at_birth - remove any non-numeric characters
+        if (isset($data['length_at_birth']) && $data['length_at_birth'] !== null) {
+            $length = $data['length_at_birth'];
+            // Remove any non-numeric characters except decimal point
+            $length = preg_replace('/[^0-9.]/', '', $length);
+            $data['length_at_birth'] = $length ?: null;
+        }
+        
+        // Clean age_in_months - ensure it's an integer
+        if (isset($data['age_in_months']) && $data['age_in_months'] !== null) {
+            $age = intval($data['age_in_months']);
+            $data['age_in_months'] = $age > 0 ? $age : null;
+        }
+        
+        // Clean date fields - ensure they're valid dates or null
+        $dateFields = [
+            'breast_feeding_date', 'bcg_date', 'hepa_b_bd_date',
+            'iron_1mo_date', 'iron_2mo_date', 'iron_3mo_date',
+            'dpt_hib_hepb_1st', 'dpt_hib_hepb_2nd', 'dpt_hib_hepb_3rd',
+            'opv_1st', 'opv_2nd', 'opv_3rd',
+            'pcv_1st', 'pcv_2nd', 'pcv_3rd', 'ipv_1st'
+        ];
+        
+        foreach ($dateFields as $field) {
+            if (isset($data[$field]) && $data[$field] !== null) {
+                // If it's an empty string, set to null
+                if ($data[$field] === '') {
+                    $data[$field] = null;
+                } else {
+                    // Try to parse the date
+                    try {
+                        $date = new \DateTime($data[$field]);
+                        $data[$field] = $date->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        $data[$field] = null;
+                    }
+                }
+            }
+        }
+        
+        // Remove any null or empty values to avoid validation issues
+        $data = array_filter($data, function($value) {
+            return $value !== null && $value !== '';
+        });
+        
+        \Log::info('Cleaned newborn data:', $data);
+        
+        return $data;
     }
 } 

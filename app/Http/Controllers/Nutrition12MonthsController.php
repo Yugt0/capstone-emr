@@ -4,12 +4,31 @@ namespace App\Http\Controllers;
 
 use App\Models\Nutrition12Months;
 use Illuminate\Http\Request;
+use App\Services\AuditLogService;
 
 class Nutrition12MonthsController extends Controller
 {
     public function index()
     {
-        return response()->json(Nutrition12Months::with('patient')->get())
+        $nutritionRecords = Nutrition12Months::with('patient')->get();
+        
+        // Log the view activity for nutrition 12 months list
+        if (auth()->check()) {
+            AuditLogService::logViewed(
+                'Nutrition12Months',
+                'list',
+                "Viewed nutrition 12 months list (Total: " . count($nutritionRecords) . " records)"
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Viewed',
+                'Nutrition12Months',
+                'list',
+                "Viewed nutrition 12 months list (Total: " . count($nutritionRecords) . " records)"
+            );
+        }
+        
+        return response()->json($nutritionRecords)
             ->header('Access-Control-Allow-Origin', '*')
             ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
             ->header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization, Accept, Origin');
@@ -47,6 +66,25 @@ class Nutrition12MonthsController extends Controller
             
             $record = Nutrition12Months::create($data);
             
+            // Log the creation with detailed description
+            if (auth()->check()) {
+                AuditLogService::logCreated(
+                    'Nutrition12Months',
+                    $record->id,
+                    "Added new nutrition 12 months record for patient ID: {$record->patient_id}",
+                    $record->toArray()
+                );
+            } else {
+                AuditLogService::logSystemActivity(
+                    'Created',
+                    'Nutrition12Months',
+                    $record->id,
+                    "Added new nutrition 12 months record for patient ID: {$record->patient_id}",
+                    null,
+                    $record->toArray()
+                );
+            }
+            
             \Log::info('Nutrition record created successfully:', $record->toArray());
             
             return response()->json($record, 201)
@@ -68,7 +106,25 @@ class Nutrition12MonthsController extends Controller
 
     public function show($id)
     {
-        return response()->json(Nutrition12Months::with('patient')->findOrFail($id))
+        $record = Nutrition12Months::with('patient')->findOrFail($id);
+        
+        // Log the view activity
+        if (auth()->check()) {
+            AuditLogService::logViewed(
+                'Nutrition12Months',
+                $id,
+                "Viewed nutrition 12 months record for patient ID: {$record->patient_id}"
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Viewed',
+                'Nutrition12Months',
+                $id,
+                "Viewed nutrition 12 months record for patient ID: {$record->patient_id}"
+            );
+        }
+        
+        return response()->json($record)
             ->header('Access-Control-Allow-Origin', '*')
             ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
             ->header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization, Accept, Origin');
@@ -81,6 +137,7 @@ class Nutrition12MonthsController extends Controller
             \Log::info('Nutrition update request data:', $request->all());
             
             $record = Nutrition12Months::findOrFail($id);
+            $oldData = $record->toArray();
             
             // Get all data and clean it up
             $data = $request->all();
@@ -107,6 +164,26 @@ class Nutrition12MonthsController extends Controller
             \Log::info('Cleaned nutrition data for update:', $data);
             
             $record->update($data);
+            
+            // Log the update with detailed description
+            if (auth()->check()) {
+                AuditLogService::logUpdated(
+                    'Nutrition12Months',
+                    $id,
+                    "Updated nutrition 12 months record for patient ID: {$record->patient_id}",
+                    $oldData,
+                    $record->getChanges()
+                );
+            } else {
+                AuditLogService::logSystemActivity(
+                    'Updated',
+                    'Nutrition12Months',
+                    $id,
+                    "Updated nutrition 12 months record for patient ID: {$record->patient_id}",
+                    $oldData,
+                    $record->getChanges()
+                );
+            }
             
             \Log::info('Nutrition record updated successfully:', $record->toArray());
             
@@ -175,7 +252,29 @@ class Nutrition12MonthsController extends Controller
 
     public function destroy($id)
     {
-        Nutrition12Months::destroy($id);
+        $record = Nutrition12Months::findOrFail($id);
+        $patientId = $record->patient_id;
+        $record->delete();
+        
+        // Log the deletion with detailed description
+        if (auth()->check()) {
+            AuditLogService::logDeleted(
+                'Nutrition12Months',
+                $id,
+                "Deleted nutrition 12 months record for patient ID: {$patientId}",
+                ['patient_id' => $patientId, 'record_id' => $id]
+            );
+        } else {
+            AuditLogService::logSystemActivity(
+                'Deleted',
+                'Nutrition12Months',
+                $id,
+                "Deleted nutrition 12 months record for patient ID: {$patientId}",
+                ['patient_id' => $patientId, 'record_id' => $id],
+                null
+            );
+        }
+        
         return response()->json(null, 204)
             ->header('Access-Control-Allow-Origin', '*')
             ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')

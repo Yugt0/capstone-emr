@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\PatientInformation;
+use App\Models\Traits\Auditable;
 
 
 class PatientMedicalRecords extends Model
 {
-    use HasFactory;
+    use HasFactory, Auditable;
 
     protected $fillable = [
         'patient_id',
@@ -25,6 +26,7 @@ class PatientMedicalRecords extends Model
         'history_of_present_illness',
         'assessment',
         'plan',
+        'medicine_takes',
     ];
 
     public function patient()

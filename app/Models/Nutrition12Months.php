@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Nutrition12Months extends Model
 {
-    use HasFactory;
+    use HasFactory, Auditable;
 
     protected $table = 'nutrition_12months';
 

@@ -1,21 +1,90 @@
 import React, { useContext, useEffect, useState } from "react";
-
-// Simulated AuthContext
-const AuthContext = React.createContext({
-  user: {
-    name: "Encoder Juan",
-    role: "encoder",
-  },
-});
+import { useAuth } from "../contexts/AuthContext";
+import "../styles/AuditLog.css";
 
 export default function AuditLogTable() {
-  const { user } = useContext(AuthContext);
+  const { user, getToken, isAuthenticated } = useAuth();
   const [logs, setLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAction, setFilterAction] = useState("All");
+  const [filterUser, setFilterUser] = useState("All");
+  const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 50,
+    total: 0
+  });
 
+  // API base URL
+  const API_BASE_URL = 'http://127.0.0.1:8000/api';
+
+  const fetchAuditLogs = async (page = 1, search = "", action = "All", user = "All") => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!isAuthenticated()) {
+        setError('Authentication required. Please log in.');
+        setLoading(false);
+        return;
+      }
+
+      const token = getToken();
+      if (!token) {
+        setError('Authentication token not found. Please log in again.');
+        setLoading(false);
+        return;
+      }
+      
+      const params = new URLSearchParams({
+        page: page,
+        per_page: pagination.per_page,
+        search: search,
+        action: action,
+        user: user
+      });
+
+      const response = await fetch(`${API_BASE_URL}/audit-logs?${params}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Authentication failed. Please log in again.');
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data.data) {
+        setLogs(data.data);
+        setPagination({
+          current_page: data.current_page,
+          last_page: data.last_page,
+          per_page: data.per_page,
+          total: data.total
+        });
+      } else {
+        setLogs(data);
+      }
+      
+      setFilteredLogs(data.data || data);
+    } catch (err) {
+      console.error('Error fetching audit logs:', err);
+      setError('Failed to load audit logs. Please try again.');
+      
+      // Fallback to dummy data for demonstration
   const dummyLogs = [
     {
       id: 1,
@@ -45,17 +114,30 @@ export default function AuditLogTable() {
       created_at: "2025-05-06T10:45:00Z",
     },
   ];
-
-  useEffect(() => {
-    const allowedRoles = ["encoder", "doctor", "midwife"];
-    if (!allowedRoles.includes(user.role)) return;
-
-    setTimeout(() => {
       setLogs(dummyLogs);
       setFilteredLogs(dummyLogs);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, [user.role]);
+    }
+  };
+
+  // Auto-refresh every 30 seconds for real-time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isAuthenticated()) {
+        fetchAuditLogs(pagination.current_page, searchQuery, filterAction, filterUser);
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, pagination.current_page, searchQuery, filterAction, filterUser]);
+
+  useEffect(() => {
+    const allowedRoles = ["encoder", "doctor", "midwife", "nursing_attendant", "cold_chain_manager"];
+    if (!user || !allowedRoles.includes(user.role)) return;
+
+    fetchAuditLogs();
+  }, [user]);
 
   useEffect(() => {
     let filtered = logs;
@@ -76,7 +158,82 @@ export default function AuditLogTable() {
     setFilteredLogs(filtered);
   }, [searchQuery, filterAction, logs]);
 
-  if (!["encoder", "doctor", "midwife"].includes(user.role)) {
+  const handlePageChange = (page) => {
+    fetchAuditLogs(page, searchQuery, filterAction, filterUser);
+  };
+
+  const handleSearch = () => {
+    fetchAuditLogs(1, searchQuery, filterAction, filterUser);
+  };
+
+  const handleActionFilter = (action) => {
+    setFilterAction(action);
+    fetchAuditLogs(1, searchQuery, action, filterUser);
+  };
+
+  const handleUserFilter = (user) => {
+    setFilterUser(user);
+    fetchAuditLogs(1, searchQuery, filterAction, user);
+  };
+
+  // Handle view details for audit log entry
+  const handleViewDetails = (log) => {
+    console.log('View audit log details:', log);
+    // You can implement a modal or detailed view here
+    alert(`Audit Log Details:\n\nUser: ${log.user_name}\nAction: ${log.action}\nModel: ${log.model}\nDescription: ${log.description}\nTimestamp: ${formatTimestamp(log.created_at)}\nIP Address: ${log.ip_address || 'N/A'}`);
+  };
+
+  // Handle export audit log entry
+  const handleExportEntry = (log) => {
+    console.log('Export audit log entry:', log);
+    // You can implement export functionality here
+    const exportData = {
+      user_name: log.user_name,
+      action: log.action,
+      model: log.model,
+      description: log.description,
+      timestamp: log.created_at,
+      ip_address: log.ip_address || 'N/A'
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `audit-log-${log.id}-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getActionBadgeClass = (action) => {
+    switch (action) {
+      case 'Created': return 'bg-success';
+      case 'Updated': return 'bg-warning text-dark';
+      case 'Deleted': return 'bg-danger';
+      case 'Viewed': return 'bg-info';
+      case 'Login': return 'bg-primary';
+      case 'Failed Login': return 'bg-danger';
+      case 'Logout': return 'bg-secondary';
+      case 'Searched': return 'bg-info';
+      case 'Exported': return 'bg-success';
+      default: return 'bg-dark';
+    }
+  };
+
+  const formatTimestamp = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  if (!user || !["encoder", "doctor", "midwife", "nursing_attendant", "cold_chain_manager"].includes(user.role)) {
     return (
       <div className="container-fluid bg-light min-vh-100 d-flex align-items-center justify-content-center">
         <div className="alert alert-danger">Access denied. Unauthorized role.</div>
@@ -86,83 +243,416 @@ export default function AuditLogTable() {
 
   return (
     <div className="container-fluid bg-light min-vh-100 py-4">
-      {/* Header */}
-      <div className="mb-4 d-flex justify-content-between align-items-center">
-        <div className="bg-primary text-white py-4 px-5 rounded shadow-sm w-100">
-          <h1 className="h3 m-0">Electronic Medical Records - Audit Logs</h1>
-          <p className="m-0">Welcome, {user.name} ({user.role})</p>
+      {/* Modern Header */}
+      <div className="header-section">
+        <div className="header-card">
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h1 className="h2 mb-2 fw-bold">
+                <i className="fas fa-history me-3"></i>
+                System Audit Logs
+              </h1>
+              <p className="mb-0 opacity-75">
+                Welcome, <strong>{user.name}</strong> ({user.role}) • 
+                <span className="ms-2">
+                  <i className="fas fa-clock me-1"></i>
+                  Real-time activity monitoring
+                </span>
+              </p>
+            </div>
+            <div className="text-end">
+              <div className="h4 mb-1">{pagination.total}</div>
+              <small className="opacity-75">Total Activities</small>
+            </div>
+          </div>
+          
+          {/* User Activity Summary */}
+          <div className="user-activity-summary mt-3">
+            <div className="row g-3">
+              <div className="col-md-3">
+                <div className="summary-card">
+                  <div className="summary-icon">
+                    <i className="fas fa-users"></i>
+                  </div>
+                  <div className="summary-content">
+                    <div className="summary-number">
+                      {logs.filter(log => log.user_name && log.user_name !== 'System').length}
+                    </div>
+                    <div className="summary-label">User Activities</div>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-3">
+                <div className="summary-card">
+                  <div className="summary-icon">
+                    <i className="fas fa-exclamation-triangle"></i>
+                  </div>
+                  <div className="summary-content">
+                    <div className="summary-number">
+                      {logs.filter(log => log.action === 'Failed Login').length}
+                    </div>
+                    <div className="summary-label">Failed Logins</div>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-3">
+                <div className="summary-card">
+                  <div className="summary-icon">
+                    <i className="fas fa-user-check"></i>
+                  </div>
+                  <div className="summary-content">
+                    <div className="summary-number">
+                      {new Set(logs.filter(log => log.user_name && log.user_name !== 'System').map(log => log.user_name)).size}
+                    </div>
+                    <div className="summary-label">Active Users</div>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-3">
+                <div className="summary-card">
+                  <div className="summary-icon">
+                    <i className="fas fa-chart-line"></i>
+                  </div>
+                  <div className="summary-content">
+                    <div className="summary-number">
+                      {logs.length > 0 ? Math.round((logs.filter(log => log.user_name && log.user_name !== 'System' && log.action !== 'Failed Login').length / logs.length) * 100) : 0}%
+                    </div>
+                    <div className="summary-label">User Activity Rate</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Error Alert */}
+      {error && (
+        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          <i className="fas fa-exclamation-triangle me-2"></i>
+          {error}
+          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        </div>
+      )}
+
       {/* Search and Filter Controls */}
-      <div className="row mb-3">
-        <div className="col-md-6 mb-2">
+      <div className="search-filter-section">
+        <div className="search-filter-card">
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-md-6">
+                <div className="input-group">
+                  <span className="input-group-text">
+                    <i className="fas fa-search text-muted"></i>
+                  </span>
           <input
             type="text"
             className="form-control"
-            placeholder="Search by user, action, model, etc."
+                    placeholder="Search activities, users, or descriptions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-          />
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <button 
+                    className="btn btn-primary" 
+                    type="button"
+                    onClick={handleSearch}
+                  >
+                    <i className="fas fa-search me-1"></i>
+                    Search
+                  </button>
+                </div>
         </div>
-        <div className="col-md-3 mb-2">
+              <div className="col-md-3">
           <select
             className="form-select"
             value={filterAction}
-            onChange={(e) => setFilterAction(e.target.value)}
+                  onChange={(e) => handleActionFilter(e.target.value)}
           >
             <option value="All">All Actions</option>
             <option value="Created">Created</option>
             <option value="Updated">Updated</option>
             <option value="Deleted">Deleted</option>
+                  <option value="Viewed">Viewed</option>
+                  <option value="Login">Login</option>
+                  <option value="Failed Login">Failed Login</option>
+                  <option value="Logout">Logout</option>
+                  <option value="Searched">Searched</option>
+                  <option value="Exported">Exported</option>
+                </select>
+              </div>
+              <div className="col-md-3">
+                <select
+                  className="form-select"
+                  value={filterUser}
+                  onChange={(e) => handleUserFilter(e.target.value)}
+                >
+                  <option value="All">All Users</option>
+                  {user && (
+                    <option value={user.name}>{user.name} ({user.role})</option>
+                  )}
+                  {/* Add unique users from audit logs */}
+                  {logs
+                    .filter(log => log.user_name && log.user_name !== 'System')
+                    .map(log => log.user_name)
+                    .filter((name, index, arr) => arr.indexOf(name) === index)
+                    .slice(0, 5) // Limit to 5 most recent unique users
+                    .map(userName => (
+                      <option key={userName} value={userName}>
+                        {userName}
+                      </option>
+                    ))
+                  }
           </select>
+              </div>
+              <div className="col-md-3">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div className="text-muted small">
+                    <i className="fas fa-sync-alt me-1"></i>
+                    Auto-refresh: 30s
+                  </div>
+                  <button 
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() => fetchAuditLogs()}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin me-1"></i>
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-sync-alt me-1"></i>
+                        Refresh
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Audit Log Table */}
-      <div className="card shadow-sm">
+      <div className="table-section">
+        <div className="card-header">
+          <h5 className="card-title mb-0 fw-bold">
+            <i className="fas fa-list me-2 text-primary"></i>
+            Recent Activities
+          </h5>
+        </div>
         <div className="card-body">
-          <h5 className="card-title mb-4">Recent Activities</h5>
-
           {loading ? (
-            <div className="text-center">
-              <div className="spinner-border text-primary" role="status" />
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary mb-3" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="text-muted">Loading audit logs...</p>
             </div>
           ) : (
+            <>
             <div className="table-responsive">
-              <table className="table table-striped table-bordered" style={{ minWidth: "1100px" }}>
-                <thead className="table-light">
-                  <tr>
-                    <th>Timestamp</th>
-                    <th>User</th>
-                    <th>Action</th>
-                    <th>Model</th>
-                    <th>Model ID</th>
-                    <th>Description</th>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>
+                        <i className="fas fa-clock me-1 text-muted"></i>
+                        Timestamp
+                      </th>
+                      <th>
+                        <i className="fas fa-user me-1 text-muted"></i>
+                        User
+                      </th>
+                      <th>
+                        <i className="fas fa-tasks me-1 text-muted"></i>
+                        Action
+                      </th>
+                      <th>
+                        <i className="fas fa-database me-1 text-muted"></i>
+                        Model
+                      </th>
+                      <th>
+                        <i className="fas fa-hashtag me-1 text-muted"></i>
+                        ID
+                      </th>
+                      <th>
+                        <i className="fas fa-info-circle me-1 text-muted"></i>
+                        Description
+                      </th>
+                      <th>
+                        <i className="fas fa-network-wired me-1 text-muted"></i>
+                        IP Address
+                      </th>
+                      <th>
+                        <i className="fas fa-cogs me-1 text-muted"></i>
+                        Actions
+                      </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredLogs.length > 0 ? (
                     filteredLogs.map((log) => (
                       <tr key={log.id}>
-                        <td>{new Date(log.created_at).toLocaleString()}</td>
-                        <td>{log.user_name}</td>
-                        <td>{log.action}</td>
-                        <td>{log.model}</td>
-                        <td>{log.model_id}</td>
-                        <td>{log.description}</td>
+                          <td>
+                            <div className="timestamp-display">
+                              {formatTimestamp(log.created_at)}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="user-info">
+                              <div className="user-avatar-circle">
+                                <i className="fas fa-user"></i>
+                              </div>
+                              <div className="user-details">
+                                <div className="user-name fw-bold text-primary fs-6">
+                                  {log.user_name || 'Unknown User'}
+                                </div>
+                                <small className="text-muted d-flex align-items-center">
+                                  <i className="fas fa-user-circle me-1"></i>
+                                  <span className="user-role-badge">
+                                    {log.user_name && log.user_name !== 'System' ? 'Active User' : 'System Activity'}
+                                  </span>
+                                </small>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`badge action-badge ${getActionBadgeClass(log.action)}`}>
+                              <i className={`fas fa-${
+                                log.action === 'Created' ? 'plus' :
+                                log.action === 'Updated' ? 'edit' :
+                                log.action === 'Deleted' ? 'trash' :
+                                log.action === 'Viewed' ? 'eye' :
+                                log.action === 'Login' ? 'sign-in-alt' :
+                                log.action === 'Failed Login' ? 'exclamation-triangle' :
+                                log.action === 'Logout' ? 'sign-out-alt' :
+                                log.action === 'Searched' ? 'search' :
+                                log.action === 'Exported' ? 'download' : 'circle'
+                              } me-1`}></i>
+                              {log.action}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="model-badge">
+                              {log.model}
+                            </span>
+                          </td>
+                          <td>
+                            <code className="text-muted">{log.model_id || '-'}</code>
+                          </td>
+                          <td>
+                            <div className="description-text">
+                              <div className="activity-description">
+                                <div className="user-highlight">
+                                  <strong className="text-primary fs-6">
+                                    <i className="fas fa-user me-1"></i>
+                                    {log.user_name || 'Unknown User'}
+                                  </strong>
+                                </div>
+                                <div className="activity-details mt-1">
+                                  <span className="activity-text">
+                                    {log.description}
+                                  </span>
+                                </div>
+                              </div>
+                              <small className="text-muted d-block mt-2">
+                                <i className="fas fa-clock me-1"></i>
+                                Activity performed by <strong>{log.user_name || 'Unknown User'}</strong>
+                              </small>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="ip-address">
+                              {log.ip_address || '-'}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="action-buttons-audit">
+                              <button
+                                className="btn-view-audit"
+                                onClick={() => handleViewDetails(log)}
+                                title="View Details"
+                                aria-label="View audit log details"
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
+                              >
+                                <i className="fas fa-eye" style={{ fontSize: '0.875rem', color: 'white' }}></i>
+                              </button>
+                              <button
+                                className="btn-export-audit"
+                                onClick={() => handleExportEntry(log)}
+                                title="Export Entry"
+                                aria-label="Export audit log entry"
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
+                              >
+                                <i className="fas fa-download" style={{ fontSize: '0.875rem', color: 'white' }}></i>
+                              </button>
+                            </div>
+                          </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="text-center text-muted">
-                        No matching records found.
+                        <td colSpan="8" className="text-center text-muted py-5">
+                          <i className="fas fa-inbox fa-2x mb-3 opacity-50"></i>
+                          <div>No matching records found.</div>
+                          <small>Try adjusting your search or filter criteria.</small>
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
+
+              {/* Pagination */}
+              {pagination.last_page > 1 && (
+                <div className="card-footer">
+                  <nav aria-label="Audit logs pagination">
+                    <ul className="pagination justify-content-center mb-0">
+                      <li className={`page-item ${pagination.current_page === 1 ? 'disabled' : ''}`}>
+                        <button 
+                          className="page-link" 
+                          onClick={() => handlePageChange(pagination.current_page - 1)}
+                          disabled={pagination.current_page === 1}
+                        >
+                          <i className="fas fa-chevron-left"></i>
+                        </button>
+                      </li>
+                      
+                      {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map(page => (
+                        <li key={page} className={`page-item ${page === pagination.current_page ? 'active' : ''}`}>
+                          <button 
+                            className="page-link" 
+                            onClick={() => handlePageChange(page)}
+                          >
+                            {page}
+                          </button>
+                        </li>
+                      ))}
+                      
+                      <li className={`page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}`}>
+                        <button 
+                          className="page-link" 
+                          onClick={() => handlePageChange(pagination.current_page + 1)}
+                          disabled={pagination.current_page === pagination.last_page}
+                        >
+                          <i className="fas fa-chevron-right"></i>
+                        </button>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
