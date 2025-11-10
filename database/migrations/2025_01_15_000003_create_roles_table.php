@@ -56,6 +56,13 @@ return new class extends Migration
                 'description' => 'Manages vaccine storage, temperature monitoring, and inventory',
                 'created_at' => now(),
                 'updated_at' => now()
+            ],
+            [
+                'name' => 'admin',
+                'display_name' => 'Administrator',
+                'description' => 'System administrator with full access to all features and user management',
+                'created_at' => now(),
+                'updated_at' => now()
             ]
         ]);
     }

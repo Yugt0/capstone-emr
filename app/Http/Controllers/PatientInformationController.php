@@ -13,7 +13,7 @@ class PatientInformationController extends Controller
      */
     public function index()
     {
-        $patients = Patient::all();
+        $patients = Patient::active()->get();
         
         // Log the view activity for patient list
         if (auth()->check()) {
@@ -49,25 +49,7 @@ class PatientInformationController extends Controller
     {
         $patient = Patient::create($request->all());
         
-        // Log the creation with detailed description
-        if (auth()->check()) {
-            AuditLogService::logCreated(
-                'PatientInformation',
-                $patient->id,
-                "Added new patient: {$patient->full_name} (ID: {$patient->id})",
-                $patient->toArray()
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Created',
-                'PatientInformation',
-                $patient->id,
-                "Added new patient: {$patient->full_name} (ID: {$patient->id})",
-                null,
-                $patient->toArray()
-            );
-        }
-        
+        // Audit logging is handled automatically by the Auditable trait
         return response()->json($patient, 201);
     }
 
@@ -111,29 +93,9 @@ class PatientInformationController extends Controller
     public function update(Request $request, $id)
     {
         $patient = Patient::findOrFail($id);
-        $oldData = $patient->toArray();
         $patient->update($request->all());
         
-        // Log the update with detailed description
-        if (auth()->check()) {
-            AuditLogService::logUpdated(
-                'PatientInformation',
-                $id,
-                "Updated patient: {$patient->full_name}",
-                $oldData,
-                $patient->getChanges()
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Updated',
-                'PatientInformation',
-                $id,
-                "Updated patient: {$patient->full_name}",
-                $oldData,
-                $patient->getChanges()
-            );
-        }
-        
+        // Audit logging is handled automatically by the Auditable trait
         return response()->json($patient);
     }
 
@@ -143,28 +105,75 @@ class PatientInformationController extends Controller
     public function destroy($id)
     {
         $patient = Patient::findOrFail($id);
-        $patientName = $patient->full_name;
         $patient->delete();
         
-        // Log the deletion with detailed description
+        // Audit logging is handled automatically by the Auditable trait
+        return response()->json(null, 204);
+    }
+
+    /**
+     * Archive a patient
+     */
+    public function archive($id)
+    {
+        $patient = Patient::findOrFail($id);
+        $patient->archive();
+        
+        // Log the archive activity
         if (auth()->check()) {
-            AuditLogService::logDeleted(
+            AuditLogService::logUpdated(
                 'PatientInformation',
                 $id,
-                "Deleted patient: {$patientName}",
-                ['full_name' => $patientName, 'id' => $id]
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Deleted',
-                'PatientInformation',
-                $id,
-                "Deleted patient: {$patientName}",
-                ['full_name' => $patientName, 'id' => $id],
-                null
+                "Archived patient: {$patient->full_name}"
             );
         }
         
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Patient archived successfully'], 200);
+    }
+
+    /**
+     * Unarchive a patient
+     */
+    public function unarchive($id)
+    {
+        $patient = Patient::findOrFail($id);
+        $patient->unarchive();
+        
+        // Log the unarchive activity
+        if (auth()->check()) {
+            AuditLogService::logUpdated(
+                'PatientInformation',
+                $id,
+                "Unarchived patient: {$patient->full_name}"
+            );
+        }
+        
+        return response()->json(['message' => 'Patient unarchived successfully'], 200);
+    }
+
+    /**
+     * Get archived patients
+     */
+    public function archived()
+    {
+        // Debug authentication
+        \Log::info('Archived patients endpoint called', [
+            'user' => auth()->user(),
+            'authenticated' => auth()->check(),
+            'token' => request()->bearerToken()
+        ]);
+        
+        $patients = Patient::archived()->get();
+        
+        // Log the view activity for archived patients
+        if (auth()->check()) {
+            AuditLogService::logViewed(
+                'PatientInformation',
+                'archived',
+                "Viewed archived patients list (Total: " . count($patients) . " patients)"
+            );
+        }
+        
+        return response()->json($patients);
     }
 }

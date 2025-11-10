@@ -66,24 +66,7 @@ class Nutrition12MonthsController extends Controller
             
             $record = Nutrition12Months::create($data);
             
-            // Log the creation with detailed description
-            if (auth()->check()) {
-                AuditLogService::logCreated(
-                    'Nutrition12Months',
-                    $record->id,
-                    "Added new nutrition 12 months record for patient ID: {$record->patient_id}",
-                    $record->toArray()
-                );
-            } else {
-                AuditLogService::logSystemActivity(
-                    'Created',
-                    'Nutrition12Months',
-                    $record->id,
-                    "Added new nutrition 12 months record for patient ID: {$record->patient_id}",
-                    null,
-                    $record->toArray()
-                );
-            }
+            // Audit logging is handled automatically by the Auditable trait
             
             \Log::info('Nutrition record created successfully:', $record->toArray());
             
@@ -165,25 +148,7 @@ class Nutrition12MonthsController extends Controller
             
             $record->update($data);
             
-            // Log the update with detailed description
-            if (auth()->check()) {
-                AuditLogService::logUpdated(
-                    'Nutrition12Months',
-                    $id,
-                    "Updated nutrition 12 months record for patient ID: {$record->patient_id}",
-                    $oldData,
-                    $record->getChanges()
-                );
-            } else {
-                AuditLogService::logSystemActivity(
-                    'Updated',
-                    'Nutrition12Months',
-                    $id,
-                    "Updated nutrition 12 months record for patient ID: {$record->patient_id}",
-                    $oldData,
-                    $record->getChanges()
-                );
-            }
+            // Audit logging is handled automatically by the Auditable trait
             
             \Log::info('Nutrition record updated successfully:', $record->toArray());
             
@@ -253,27 +218,9 @@ class Nutrition12MonthsController extends Controller
     public function destroy($id)
     {
         $record = Nutrition12Months::findOrFail($id);
-        $patientId = $record->patient_id;
         $record->delete();
         
-        // Log the deletion with detailed description
-        if (auth()->check()) {
-            AuditLogService::logDeleted(
-                'Nutrition12Months',
-                $id,
-                "Deleted nutrition 12 months record for patient ID: {$patientId}",
-                ['patient_id' => $patientId, 'record_id' => $id]
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Deleted',
-                'Nutrition12Months',
-                $id,
-                "Deleted nutrition 12 months record for patient ID: {$patientId}",
-                ['patient_id' => $patientId, 'record_id' => $id],
-                null
-            );
-        }
+        // Audit logging is handled automatically by the Auditable trait
         
         return response()->json(null, 204)
             ->header('Access-Control-Allow-Origin', '*')

@@ -49,24 +49,7 @@ class VaccineListController extends Controller
     {
         $vaccineList = VaccineList::create($request->all());
         
-        // Log the creation with detailed description
-        if (auth()->check()) {
-            AuditLogService::logCreated(
-                'VaccineList',
-                $vaccineList->id,
-                "Added new vaccine: {$vaccineList->product} (Quantity: {$vaccineList->delivery})",
-                $vaccineList->toArray()
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Created',
-                'VaccineList',
-                $vaccineList->id,
-                "Added new vaccine: {$vaccineList->product} (Quantity: {$vaccineList->delivery})",
-                null,
-                $vaccineList->toArray()
-            );
-        }
+        // Audit logging is handled automatically by the Auditable trait
         
         return response()->json($vaccineList, 201);
     }
@@ -111,28 +94,9 @@ class VaccineListController extends Controller
     public function update(Request $request, string $id)
     {
         $vaccineList = VaccineList::findOrFail($id);
-        $oldData = $vaccineList->toArray();
         $vaccineList->update($request->all());
         
-        // Log the update with detailed description
-        if (auth()->check()) {
-            AuditLogService::logUpdated(
-                'VaccineList',
-                $id,
-                "Updated vaccine: {$vaccineList->product}",
-                $oldData,
-                $vaccineList->getChanges()
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Updated',
-                'VaccineList',
-                $id,
-                "Updated vaccine: {$vaccineList->product}",
-                $oldData,
-                $vaccineList->getChanges()
-            );
-        }
+        // Audit logging is handled automatically by the Auditable trait
         
         return response()->json($vaccineList);
     }
@@ -143,28 +107,53 @@ class VaccineListController extends Controller
     public function destroy(string $id)
     {
         $vaccineList = VaccineList::findOrFail($id);
-        $productName = $vaccineList->product;
         $vaccineList->delete();
         
-        // Log the deletion with detailed description
+        // Audit logging is handled automatically by the Auditable trait
+        
+        return response()->json(null, 204);
+    }
+
+    /**
+     * Use/Consume vaccine (custom operation)
+     */
+    public function useVaccine(Request $request, string $id)
+    {
+        $vaccineList = VaccineList::findOrFail($id);
+        
+        // Update the vaccine first
+        $vaccineList->update($request->all());
+        
+        // Log the use activity manually since it's not a standard CRUD operation
         if (auth()->check()) {
-            AuditLogService::logDeleted(
+            $user = auth()->user();
+            \Log::info('VaccineListController: Logging use activity', [
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'vaccine_id' => $id,
+                'product' => $vaccineList->product,
+                'quantity' => $request->quantity
+            ]);
+            
+            AuditLogService::log(
+                'Used',
                 'VaccineList',
                 $id,
-                "Deleted vaccine: {$productName}",
-                ['product' => $productName]
+                "Used vaccine: {$vaccineList->product} - Used quantity: {$request->quantity}, Remaining: " . $vaccineList->remaining_balance,
+                null,
+                null,
+                $request
             );
         } else {
+            \Log::warning('VaccineListController: No authenticated user for use activity');
             AuditLogService::logSystemActivity(
-                'Deleted',
+                'Used',
                 'VaccineList',
                 $id,
-                "Deleted vaccine: {$productName}",
-                ['product' => $productName],
-                null
+                "Used vaccine: {$vaccineList->product} - Used quantity: {$request->quantity}, Remaining: " . $vaccineList->remaining_balance
             );
         }
         
-        return response()->json(null, 204);
+        return response()->json($vaccineList);
     }
 }

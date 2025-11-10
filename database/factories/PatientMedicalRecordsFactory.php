@@ -202,7 +202,7 @@ class PatientMedicalRecordsFactory extends Factory
             'history_of_present_illness' => $historyOfPresentIllnessText,
             'assessment' => $assessment,
             'plan' => $plan,
-            'medicine_takes' => $medicineTakes,
+            // 'medicine_takes' => $medicineTakes, // Temporarily commented out until migration is run
         ];
     }
 }

@@ -115,7 +115,15 @@
 
 /* Toast Notification */
 .toast-container {
-  z-index: 9999;
+  z-index: 100001 !important;
+  position: fixed !important;
+  top: 1rem !important;
+  right: 1rem !important;
+}
+
+/* Ensure toast notifications appear above everything */
+.position-fixed.top-0.end-0.p-3 {
+  z-index: 100001 !important;
 }
 
 .toast.show {
@@ -125,6 +133,8 @@
   border-radius: 12px;
   box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
   animation: slideInRight 0.5s ease-out;
+  z-index: 100002 !important;
+  position: relative;
 }
 
 .toast-header {
@@ -241,6 +251,11 @@
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.inventory-table .table {
+  margin-bottom: 0;
 }
 
 .table-header {
@@ -249,7 +264,7 @@
 
 .table-header th {
   border: none;
-  padding: 1rem;
+  padding: 1.5rem 0 1.5rem 1.25rem;
   font-weight: 600;
   color: #495057;
   text-transform: uppercase;
@@ -269,7 +284,7 @@
 
 .table tbody td {
   border: none;
-  padding: 1rem;
+  padding: 1.25rem 0 1.25rem 1.25rem;
   vertical-align: middle;
 }
 
@@ -535,6 +550,6 @@
   
   .table-header th,
   .table tbody td {
-    padding: 0.5rem;
+    padding: 0.75rem 0 0.75rem 0.75rem;
   }
 }

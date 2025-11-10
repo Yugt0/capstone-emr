@@ -51,25 +51,7 @@ class PatientMedicalRecordsController extends Controller
     {
         $record = MedicalRecord::create($request->all());
         
-        // Log the creation with detailed description
-        if (auth()->check()) {
-            AuditLogService::logCreated(
-                'PatientMedicalRecords',
-                $record->id,
-                "Added new medical record for patient ID: {$record->patient_id}",
-                $record->toArray()
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Created',
-                'PatientMedicalRecords',
-                $record->id,
-                "Added new medical record for patient ID: {$record->patient_id}",
-                null,
-                $record->toArray()
-            );
-        }
-        
+        // Audit logging is handled automatically by the Auditable trait
         return response()->json($record, 201);
     }
 
@@ -95,31 +77,44 @@ class PatientMedicalRecordsController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $record = MedicalRecord::findOrFail($id);
-        $oldData = $record->toArray();
-        $record->update($request->all());
-        
-        // Log the update with detailed description
-        if (auth()->check()) {
-            AuditLogService::logUpdated(
-                'PatientMedicalRecords',
-                $id,
-                "Updated medical record for patient ID: {$record->patient_id}",
-                $oldData,
-                $record->getChanges()
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Updated',
-                'PatientMedicalRecords',
-                $id,
-                "Updated medical record for patient ID: {$record->patient_id}",
-                $oldData,
-                $record->getChanges()
-            );
+        try {
+            // Log the incoming data for debugging
+            \Log::info('Medical record update request data:', $request->all());
+            
+            $record = MedicalRecord::findOrFail($id);
+            $oldData = $record->toArray();
+            
+            // Get all data and clean it up
+            $data = $request->all();
+            
+            // Remove any null or empty values to avoid validation issues
+            $data = array_filter($data, function($value) {
+                return $value !== null && $value !== '';
+            });
+            
+            \Log::info('Cleaned medical record data for update:', $data);
+            
+            $record->update($data);
+            
+            // Audit logging is handled automatically by the Auditable trait
+            
+            \Log::info('Medical record updated successfully:', $record->toArray());
+            
+            return response()->json($record, 200)
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization, Accept, Origin');
+        } catch (\Exception $e) {
+            \Log::error('Medical record update error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json(['error' => $e->getMessage()], 500)
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization, Accept, Origin');
         }
-        
-        return response()->json($record);
     }
 
     /**
@@ -128,28 +123,9 @@ class PatientMedicalRecordsController extends Controller
     public function destroy($id)
     {
         $record = MedicalRecord::findOrFail($id);
-        $patientId = $record->patient_id;
         $record->delete();
         
-        // Log the deletion with detailed description
-        if (auth()->check()) {
-            AuditLogService::logDeleted(
-                'PatientMedicalRecords',
-                $id,
-                "Deleted medical record for patient ID: {$patientId}",
-                ['patient_id' => $patientId, 'record_id' => $id]
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Deleted',
-                'PatientMedicalRecords',
-                $id,
-                "Deleted medical record for patient ID: {$patientId}",
-                ['patient_id' => $patientId, 'record_id' => $id],
-                null
-            );
-        }
-        
+        // Audit logging is handled automatically by the Auditable trait
         return response()->json(null, 204);
     }
 }

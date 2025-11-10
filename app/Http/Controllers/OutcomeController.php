@@ -68,24 +68,7 @@ class OutcomeController extends Controller
             
             $outcome = Outcome::create($data);
             
-            // Log the creation with detailed description
-            if (auth()->check()) {
-                AuditLogService::logCreated(
-                    'Outcome',
-                    $outcome->id,
-                    "Added new outcome record for patient ID: {$outcome->patient_id}",
-                    $outcome->toArray()
-                );
-            } else {
-                AuditLogService::logSystemActivity(
-                    'Created',
-                    'Outcome',
-                    $outcome->id,
-                    "Added new outcome record for patient ID: {$outcome->patient_id}",
-                    null,
-                    $outcome->toArray()
-                );
-            }
+            // Audit logging is handled automatically by the Auditable trait
             
             \Log::info('Outcome record created successfully:', $outcome->toArray());
             
@@ -169,25 +152,7 @@ class OutcomeController extends Controller
             
             $outcome->update($data);
             
-            // Log the update with detailed description
-            if (auth()->check()) {
-                AuditLogService::logUpdated(
-                    'Outcome',
-                    $id,
-                    "Updated outcome record for patient ID: {$outcome->patient_id}",
-                    $oldData,
-                    $outcome->getChanges()
-                );
-            } else {
-                AuditLogService::logSystemActivity(
-                    'Updated',
-                    'Outcome',
-                    $id,
-                    "Updated outcome record for patient ID: {$outcome->patient_id}",
-                    $oldData,
-                    $outcome->getChanges()
-                );
-            }
+            // Audit logging is handled automatically by the Auditable trait
             
             \Log::info('Outcome record updated successfully:', $outcome->toArray());
             
@@ -215,27 +180,9 @@ class OutcomeController extends Controller
     {
         try {
             $outcome = Outcome::findOrFail($id);
-            $patientId = $outcome->patient_id;
             $outcome->delete();
             
-            // Log the deletion with detailed description
-            if (auth()->check()) {
-                AuditLogService::logDeleted(
-                    'Outcome',
-                    $id,
-                    "Deleted outcome record for patient ID: {$patientId}",
-                    ['patient_id' => $patientId, 'record_id' => $id]
-                );
-            } else {
-                AuditLogService::logSystemActivity(
-                    'Deleted',
-                    'Outcome',
-                    $id,
-                    "Deleted outcome record for patient ID: {$patientId}",
-                    ['patient_id' => $patientId, 'record_id' => $id],
-                    null
-                );
-            }
+            // Audit logging is handled automatically by the Auditable trait
             
             return response()->json(null, 204)
                 ->header('Access-Control-Allow-Origin', '*')

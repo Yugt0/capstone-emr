@@ -29,9 +29,9 @@ const ProtectedRoute = ({ children, requiredPage }) => {
     console.log('🚫 User role:', user?.role);
     console.log('🚫 Available pages for this role:', getAccessiblePages());
     
-    // For doctors, redirect to dashboard instead of showing unauthorized page
-    if (user?.role?.toLowerCase().includes('doctor')) {
-      console.log('🔄 Redirecting doctor to dashboard instead of unauthorized page');
+    // For doctors and admins, redirect to dashboard instead of showing unauthorized page
+    if (user?.role?.toLowerCase().includes('doctor') || user?.role?.toLowerCase().includes('admin')) {
+      console.log('🔄 Redirecting user to dashboard instead of unauthorized page');
       return <Navigate to="/" replace />;
     }
     

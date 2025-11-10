@@ -133,7 +133,7 @@ export default function AuditLogTable() {
   }, [isAuthenticated, pagination.current_page, searchQuery, filterAction, filterUser]);
 
   useEffect(() => {
-    const allowedRoles = ["encoder", "doctor", "midwife", "nursing_attendant", "cold_chain_manager"];
+    const allowedRoles = ["admin"];
     if (!user || !allowedRoles.includes(user.role)) return;
 
     fetchAuditLogs();
@@ -233,30 +233,41 @@ export default function AuditLogTable() {
     });
   };
 
-  if (!user || !["encoder", "doctor", "midwife", "nursing_attendant", "cold_chain_manager"].includes(user.role)) {
+  if (!user || !["admin"].includes(user.role)) {
     return (
       <div className="container-fluid bg-light min-vh-100 d-flex align-items-center justify-content-center">
-        <div className="alert alert-danger">Access denied. Unauthorized role.</div>
+        <div className="alert alert-danger">
+          <i className="fas fa-shield-alt me-2"></i>
+          Access denied. Only administrators can view audit logs.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid bg-light min-vh-100 py-4">
+    <div className="container-fluid bg-light min-vh-100" style={{ marginTop: '0', paddingTop: '0', }}>
       {/* Modern Header */}
       <div className="header-section">
         <div className="header-card">
           <div className="d-flex justify-content-between align-items-center">
             <div>
               <h1 className="h2 mb-2 fw-bold">
-                <i className="fas fa-history me-3"></i>
+                <i className="fas fa-shield-alt me-3 text-warning"></i>
                 System Audit Logs
+                <span className="badge bg-warning text-dark ms-2" style={{ fontSize: '0.6rem' }}>
+                  <i className="fas fa-crown me-1"></i>
+                  Admin Only
+                </span>
               </h1>
               <p className="mb-0 opacity-75">
-                Welcome, <strong>{user.name}</strong> ({user.role}) • 
+                Welcome, <strong>{user.name}</strong> (Administrator) • 
                 <span className="ms-2">
                   <i className="fas fa-clock me-1"></i>
                   Real-time activity monitoring
+                </span>
+                <span className="ms-3">
+                  <i className="fas fa-user-shield me-1 text-warning"></i>
+                  <span className="text-warning fw-semibold">Admin Access: {user.name}</span>
                 </span>
               </p>
             </div>
@@ -266,6 +277,44 @@ export default function AuditLogTable() {
             </div>
           </div>
           
+          {/* Current User Accountability Banner */}
+          <div className="current-user-accountability mt-3 mb-4">
+            <div className="alert alert-info border-0 shadow-sm" style={{ 
+              background: '#ffffff', 
+              color: '#1e293b',
+              borderRadius: '12px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <div className="d-flex align-items-center justify-content-between">
+                <div className="d-flex align-items-center">
+                  <div className="me-3">
+                    <i className="fas fa-user-shield fa-2x" style={{ color: '#3b82f6' }}></i>
+                  </div>
+                  <div>
+                    <h6 className="mb-1 fw-bold" style={{ color: '#1e293b' }}>
+                      <i className="fas fa-shield-alt me-2" style={{ color: '#f59e0b' }}></i>
+                      Administrative Oversight
+                    </h6>
+                    <p className="mb-0" style={{ color: '#64748b' }}>
+                      Full system audit access granted to: <strong style={{ color: '#1e293b' }}>{user.name}</strong> (Administrator)
+                    </p>
+                  </div>
+                </div>
+                <div className="text-end">
+                  <div className="badge px-3 py-2" style={{ 
+                    fontSize: '0.9rem',
+                    background: '#fef3c7',
+                    color: '#92400e',
+                    border: '1px solid #f59e0b'
+                  }}>
+                    <i className="fas fa-crown me-1"></i>
+                    Admin Session Active
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* User Activity Summary */}
           <div className="user-activity-summary mt-3">
             <div className="row g-3">
@@ -309,15 +358,22 @@ export default function AuditLogTable() {
                 </div>
               </div>
               <div className="col-md-3">
-                <div className="summary-card">
-                  <div className="summary-icon">
-                    <i className="fas fa-chart-line"></i>
+                <div className="summary-card" style={{
+                  background: '#ffffff',
+                  color: '#1e293b',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <div className="summary-icon" style={{
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                    color: 'white'
+                  }}>
+                    <i className="fas fa-user-check"></i>
                   </div>
                   <div className="summary-content">
-                    <div className="summary-number">
-                      {logs.length > 0 ? Math.round((logs.filter(log => log.user_name && log.user_name !== 'System' && log.action !== 'Failed Login').length / logs.length) * 100) : 0}%
+                    <div className="summary-number" style={{ color: '#1e293b' }}>
+                      {logs.filter(log => log.user_name === user.name).length}
                     </div>
-                    <div className="summary-label">User Activity Rate</div>
+                    <div className="summary-label" style={{ color: '#64748b' }}>Your Activities</div>
                   </div>
                 </div>
               </div>
@@ -389,11 +445,14 @@ export default function AuditLogTable() {
                 >
                   <option value="All">All Users</option>
                   {user && (
-                    <option value={user.name}>{user.name} ({user.role})</option>
+                    <option value={user.name} style={{ fontWeight: 'bold', color: '#198754' }}>
+                      <i className="fas fa-user-check me-1"></i>
+                      {user.name} ({user.role}) - Your Activities
+                    </option>
                   )}
                   {/* Add unique users from audit logs */}
                   {logs
-                    .filter(log => log.user_name && log.user_name !== 'System')
+                    .filter(log => log.user_name && log.user_name !== 'System' && log.user_name !== user.name)
                     .map(log => log.user_name)
                     .filter((name, index, arr) => arr.indexOf(name) === index)
                     .slice(0, 5) // Limit to 5 most recent unique users
@@ -438,10 +497,18 @@ export default function AuditLogTable() {
       {/* Audit Log Table */}
       <div className="table-section">
         <div className="card-header">
-          <h5 className="card-title mb-0 fw-bold">
-            <i className="fas fa-list me-2 text-primary"></i>
-            Recent Activities
-          </h5>
+          <div className="d-flex justify-content-between align-items-center">
+            <h5 className="card-title mb-0 fw-bold">
+              <i className="fas fa-list me-2 text-primary"></i>
+              Recent Activities
+            </h5>
+            <div className="current-user-indicator">
+              <span className="badge bg-warning text-dark px-3 py-2" style={{ fontSize: '0.85rem' }}>
+                <i className="fas fa-crown me-1"></i>
+                Admin View: <strong>{user.name}</strong>
+              </span>
+            </div>
+          </div>
         </div>
         <div className="card-body">
           {loading ? (
@@ -494,7 +561,10 @@ export default function AuditLogTable() {
                 <tbody>
                   {filteredLogs.length > 0 ? (
                     filteredLogs.map((log) => (
-                      <tr key={log.id}>
+                      <tr key={log.id} className={log.user_name === user.name ? 'table-success' : ''} style={{
+                        backgroundColor: log.user_name === user.name ? 'rgba(25, 135, 84, 0.05)' : 'transparent',
+                        borderLeft: log.user_name === user.name ? '4px solid #198754' : 'none'
+                      }}>
                           <td>
                             <div className="timestamp-display">
                               {formatTimestamp(log.created_at)}
@@ -502,17 +572,29 @@ export default function AuditLogTable() {
                           </td>
                           <td>
                             <div className="user-info">
-                              <div className="user-avatar-circle">
-                                <i className="fas fa-user"></i>
+                              <div className="user-avatar-circle" style={{
+                                backgroundColor: log.user_name === user.name ? '#198754' : '#6c757d',
+                                color: 'white'
+                              }}>
+                                <i className={`fas ${log.user_name === user.name ? 'fa-user-check' : 'fa-user'}`}></i>
                               </div>
                               <div className="user-details">
-                                <div className="user-name fw-bold text-primary fs-6">
+                                <div className="user-name fw-bold fs-6" style={{
+                                  color: log.user_name === user.name ? '#198754' : '#0d6efd'
+                                }}>
                                   {log.user_name || 'Unknown User'}
+                                  {log.user_name === user.name && (
+                                    <span className="ms-2 badge bg-success" style={{ fontSize: '0.6rem' }}>
+                                      <i className="fas fa-check me-1"></i>
+                                      You
+                                    </span>
+                                  )}
                                 </div>
                                 <small className="text-muted d-flex align-items-center">
-                                  <i className="fas fa-user-circle me-1"></i>
+                                  <i className={`fas ${log.user_name === user.name ? 'fa-user-check' : 'fa-user-circle'} me-1`}></i>
                                   <span className="user-role-badge">
-                                    {log.user_name && log.user_name !== 'System' ? 'Active User' : 'System Activity'}
+                                    {log.user_name === user.name ? 'Your Activity' : 
+                                     log.user_name && log.user_name !== 'System' ? 'Active User' : 'System Activity'}
                                   </span>
                                 </small>
                               </div>
@@ -618,37 +700,93 @@ export default function AuditLogTable() {
                 <div className="card-footer">
                   <nav aria-label="Audit logs pagination">
                     <ul className="pagination justify-content-center mb-0">
+                      {/* Previous Button */}
                       <li className={`page-item ${pagination.current_page === 1 ? 'disabled' : ''}`}>
                         <button 
                           className="page-link" 
                           onClick={() => handlePageChange(pagination.current_page - 1)}
                           disabled={pagination.current_page === 1}
+                          title="Previous page"
                         >
                           <i className="fas fa-chevron-left"></i>
                         </button>
                       </li>
                       
-                      {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map(page => (
-                        <li key={page} className={`page-item ${page === pagination.current_page ? 'active' : ''}`}>
-                          <button 
-                            className="page-link" 
-                            onClick={() => handlePageChange(page)}
-                          >
-                            {page}
-                          </button>
-                        </li>
-                      ))}
+                      {/* First Page */}
+                      {pagination.current_page > 3 && (
+                        <>
+                          <li className="page-item">
+                            <button 
+                              className="page-link" 
+                              onClick={() => handlePageChange(1)}
+                            >
+                              1
+                            </button>
+                          </li>
+                          {pagination.current_page > 4 && (
+                            <li className="page-item disabled">
+                              <span className="page-link">...</span>
+                            </li>
+                          )}
+                        </>
+                      )}
                       
+                      {/* Pages around current page */}
+                      {Array.from({ length: pagination.last_page }, (_, i) => i + 1)
+                        .filter(page => {
+                          return page >= Math.max(1, pagination.current_page - 2) && 
+                                 page <= Math.min(pagination.last_page, pagination.current_page + 2);
+                        })
+                        .map(page => (
+                          <li key={page} className={`page-item ${page === pagination.current_page ? 'active' : ''}`}>
+                            <button 
+                              className="page-link" 
+                              onClick={() => handlePageChange(page)}
+                            >
+                              {page}
+                            </button>
+                          </li>
+                        ))}
+                      
+                      {/* Last Page */}
+                      {pagination.current_page < pagination.last_page - 2 && (
+                        <>
+                          {pagination.current_page < pagination.last_page - 3 && (
+                            <li className="page-item disabled">
+                              <span className="page-link">...</span>
+                            </li>
+                          )}
+                          <li className="page-item">
+                            <button 
+                              className="page-link" 
+                              onClick={() => handlePageChange(pagination.last_page)}
+                            >
+                              {pagination.last_page}
+                            </button>
+                          </li>
+                        </>
+                      )}
+                      
+                      {/* Next Button */}
                       <li className={`page-item ${pagination.current_page === pagination.last_page ? 'disabled' : ''}`}>
                         <button 
                           className="page-link" 
                           onClick={() => handlePageChange(pagination.current_page + 1)}
                           disabled={pagination.current_page === pagination.last_page}
+                          title="Next page"
                         >
                           <i className="fas fa-chevron-right"></i>
                         </button>
                       </li>
                     </ul>
+                    
+                    {/* Page Info */}
+                    <div className="d-flex justify-content-center mt-2">
+                      <small className="text-muted">
+                        Page {pagination.current_page} of {pagination.last_page} 
+                        ({pagination.total} total records)
+                      </small>
+                    </div>
                   </nav>
                 </div>
               )}

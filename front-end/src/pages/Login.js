@@ -14,6 +14,8 @@ export default function Login() {
   const [remainingAttempts, setRemainingAttempts] = useState(3);
   const [isLocked, setIsLocked] = useState(false);
   const [remainingTime, setRemainingTime] = useState(0);
+  const [isDeactivated, setIsDeactivated] = useState(false);
+  const [lockoutCount, setLockoutCount] = useState(0);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -84,12 +86,20 @@ export default function Login() {
         setRemainingAttempts(3);
         setIsLocked(false);
         setRemainingTime(0);
+        setIsDeactivated(false);
+        setLockoutCount(0);
         login(data.user, data.token);
         navigate(from, { replace: true });
       } else {
         // Handle different error responses
-        if (data.locked) {
+        if (data.deactivated) {
+          // Account has been deactivated/suspended after 3 lockouts
+          setIsDeactivated(true);
+          setLockoutCount(data.lockout_count || 0);
+          setError(data.message || "Your account has been suspended. Please contact an administrator.");
+        } else if (data.locked) {
           setIsLocked(true);
+          setIsDeactivated(false);
           // Convert backend time to seconds (assuming backend sends time in minutes)
           const timeInMinutes = data.remaining_time || 10;
           setRemainingTime(Math.floor(timeInMinutes * 60)); // Convert to seconds
@@ -97,8 +107,10 @@ export default function Login() {
         } else if (data.remaining_attempts !== undefined) {
           setRemainingAttempts(data.remaining_attempts);
           setIsLocked(false);
+          setIsDeactivated(false);
           setError(`${data.message} (${data.remaining_attempts} attempts remaining)`);
         } else {
+          setIsDeactivated(false);
           setError(data.message || "Invalid username or password");
         }
       }
@@ -127,7 +139,7 @@ export default function Login() {
           <div className="login-card">
             <div className="logo-section">
               <img
-                src="images/sala-health_office-logo.png"
+                src="images/City Health Office Logo.jpg"
                 alt="Sala Health Office Logo"
                 className="logo"
               />
@@ -136,7 +148,10 @@ export default function Login() {
             </div>
 
             <form onSubmit={handleSubmit} className="login-form">
-              <h2 className="login-title">Sign In</h2>
+              <h2 className="login-title">Welcome Back</h2>
+              <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.9rem', marginBottom: '1.75rem', marginTop: '-1rem' }}>
+                Sign in to access your account
+              </p>
               
               <div className="form-group">
                 <label htmlFor="username" className="form-label">Username</label>
@@ -151,7 +166,7 @@ export default function Login() {
                     placeholder="Enter your username"
                     className="form-input"
                     required
-                    disabled={isLocked}
+                    disabled={isLocked || isDeactivated}
                   />
                 </div>
               </div>
@@ -169,14 +184,14 @@ export default function Login() {
                     placeholder="Enter your password"
                     className="form-input"
                     required
-                    disabled={isLocked}
+                    disabled={isLocked || isDeactivated}
                   />
                   <button
                     type="button"
                     className="password-toggle"
                     onClick={togglePassword}
                     aria-label={showPassword ? "Hide password" : "Show password"}
-                    disabled={isLocked}
+                    disabled={isLocked || isDeactivated}
                   >
                     <img
                       src={showPassword ? "images/view.png" : "images/eye.png"}
@@ -188,17 +203,25 @@ export default function Login() {
               </div>
 
               {error && (
-                <div className={`alert ${isLocked ? 'alert-warning' : 'alert-danger'}`} role="alert">
+                <div className={`alert ${isDeactivated ? 'alert-danger' : isLocked ? 'alert-warning' : 'alert-danger'}`} role="alert">
                   {error}
                   {isLocked && remainingTime > 0 && (
                     <div className="mt-2">
                       <strong>Time remaining: {formatTimeRemaining(remainingTime)}</strong>
                     </div>
                   )}
+                  {isDeactivated && lockoutCount >= 3 && (
+                    <div className="mt-2">
+                      <strong>Your account was locked {lockoutCount} times.</strong>
+                      <p className="mb-0 mt-1" style={{ fontSize: '0.9rem' }}>
+                        For security reasons, your account has been suspended. Only an administrator can reactivate your account.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {!isLocked && remainingAttempts < 3 && (
+              {!isLocked && !isDeactivated && remainingAttempts < 3 && (
                 <div className="alert alert-info" role="alert">
                   <strong>Security Notice:</strong> {remainingAttempts} attempt{remainingAttempts !== 1 ? 's' : ''} remaining before account lockout.
                 </div>
@@ -207,10 +230,11 @@ export default function Login() {
               <button 
                 type="submit" 
                 className="login-button" 
-                disabled={loading || isLocked}
+                disabled={loading || isLocked || isDeactivated}
               >
                 <span>
                   {loading ? "Signing In..." : 
+                   isDeactivated ? "Account Suspended" :
                    isLocked ? "Account Locked" : "Sign In"}
                 </span>
                 {loading && <div className="button-loader"></div>}
@@ -219,9 +243,8 @@ export default function Login() {
 
             <div className="login-footer">
               <p className="register-text">
-                Don't have an account?
+                Contact your administrator to create an account.
               </p>
-              <Link to="/register" className="register-link">Register here</Link>
             </div>
           </div>
         </div>

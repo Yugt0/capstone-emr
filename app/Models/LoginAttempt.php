@@ -45,6 +45,9 @@ class LoginAttempt extends Model
                 // Lock for 10 minutes after 3 attempts
                 if ($attempt->attempts >= 3) {
                     $attempt->update(['locked_until' => now()->addMinutes(10)]);
+                    
+                    // Increment user's lockout count when they get locked
+                    self::incrementUserLockoutCount($username);
                 }
             }
         } else {
@@ -54,6 +57,46 @@ class LoginAttempt extends Model
                 'attempts' => 1,
                 'last_attempt_at' => now()
             ]);
+        }
+    }
+
+    /**
+     * Increment user's lockout count and deactivate if needed
+     */
+    public static function incrementUserLockoutCount($username)
+    {
+        $user = \App\Models\User::where('username', $username)->first();
+        
+        if ($user) {
+            $user->increment('lockout_count');
+            
+            // Deactivate account after 3 lockouts
+            if ($user->lockout_count >= 3 && $user->status === 'active') {
+                $user->update(['status' => 'suspended']);
+                
+                // Log the automatic suspension
+                \App\Services\AuditLogService::logSystemActivity(
+                    'Suspended',
+                    'User',
+                    $user->id,
+                    "User account automatically suspended after 3 lockouts. Username: {$username}"
+                );
+            }
+        }
+    }
+
+    /**
+     * Reset user's lockout count (admin only)
+     */
+    public static function resetUserLockoutCount($username)
+    {
+        $user = \App\Models\User::where('username', $username)->first();
+        
+        if ($user) {
+            $user->update(['lockout_count' => 0]);
+            
+            // Also clear any login attempts
+            self::clearFailedAttempts($username);
         }
     }
 

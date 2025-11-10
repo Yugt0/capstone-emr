@@ -49,6 +49,7 @@
   border-spacing: 0;
   margin-bottom: 0;
   width: 100%;
+  table-layout: auto;
 }
 
 .table th {
@@ -60,13 +61,22 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  white-space: nowrap;
+  min-width: 120px;
 }
 
 .table td {
   padding: 1rem 0.75rem;
-  vertical-align: middle;
+  vertical-align: top;
   border-bottom: 1px solid #f8f9fa;
   background-color: #fff;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 500px;
+}
+
+.table tbody tr {
+  min-height: 80px;
 }
 
 .table tbody tr:hover {
@@ -77,6 +87,12 @@
 
 .table tbody tr:last-child td {
   border-bottom: none;
+}
+
+.table tbody tr td {
+  height: auto;
+  min-height: 80px;
+  vertical-align: top;
 }
 
 /* Badge styling */
@@ -210,24 +226,35 @@
 /* Header styling */
 .header-section {
   margin-bottom: 1.5rem;
+  margin-top: 0;
 }
 
 .header-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #ffffff;
+  color: #1e293b;
   padding: 2rem 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
 }
 
 .header-card h1 {
   margin-bottom: 0.5rem;
   font-weight: 700;
+  color: #1e293b;
 }
 
 .header-card p {
   margin-bottom: 0;
-  opacity: 0.9;
+  color: #64748b;
+}
+
+.header-card .text-success {
+  color: #059669 !important;
+}
+
+.header-card .opacity-75 {
+  color: #64748b !important;
 }
 
 /* Search and filter section */
@@ -328,6 +355,13 @@
 }
 
 /* Custom scrollbar */
+.table-responsive {
+  overflow-x: auto;
+  overflow-y: visible;
+  max-height: none;
+  border-radius: 8px;
+}
+
 .table-responsive::-webkit-scrollbar {
   height: 8px;
 }
@@ -391,13 +425,15 @@
 /* Enhanced user info styling */
 .user-info {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   padding: 0.5rem;
   border-radius: 8px;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
+  min-height: 60px;
+  width: 100%;
 }
 
 .user-info:hover {
@@ -480,11 +516,11 @@
 
 /* Fix for description text */
 .description-text {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  width: 500px;
+  overflow: visible;
+  white-space: normal;
   color: #495057;
+  line-height: 1.4;
 }
 
 /* Alert styling */
@@ -531,7 +567,7 @@
 }
 
 .summary-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 1rem;

@@ -21,6 +21,8 @@ class PatientInformation extends Model
         'contact_number',
         'address',      
         'barangay',
+        'archived',
+        'archived_at',
     ];
 
     public function medicalRecords()
@@ -40,6 +42,44 @@ class PatientInformation extends Model
         ]);
         
         return implode(' ', $parts);
+    }
+
+    /**
+     * Scope to get only non-archived patients
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('archived', false);
+    }
+
+    /**
+     * Scope to get only archived patients
+     */
+    public function scopeArchived($query)
+    {
+        return $query->where('archived', true);
+    }
+
+    /**
+     * Archive a patient
+     */
+    public function archive()
+    {
+        $this->update([
+            'archived' => true,
+            'archived_at' => now()
+        ]);
+    }
+
+    /**
+     * Unarchive a patient
+     */
+    public function unarchive()
+    {
+        $this->update([
+            'archived' => false,
+            'archived_at' => null
+        ]);
     }
 
 }

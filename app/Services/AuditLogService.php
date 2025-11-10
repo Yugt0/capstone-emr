@@ -20,27 +20,71 @@ class AuditLogService
         ?array $newValues = null,
         ?Request $request = null
     ): ?AuditLog {
-        $user = Auth::user();
         $request = $request ?? request();
+        
+        // Try to get user from Auth first, then from request
+        $user = Auth::user();
+        if (!$user && $request) {
+            $user = $request->user();
+        }
+
+        // If still no user, try to get from token
+        if (!$user && $request->bearerToken()) {
+            try {
+                $token = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+                if ($token) {
+                    $user = $token->tokenable;
+                }
+            } catch (\Exception $e) {
+                // Token is invalid or expired
+            }
+        }
 
         // Only log activities if there's an authenticated user
         // This prevents automatic system activities from being logged
         if (!$user) {
+            \Log::warning('AuditLogService: No authenticated user found for action', [
+                'action' => $action,
+                'model' => $model,
+                'model_id' => $modelId,
+                'has_bearer_token' => $request->bearerToken() ? 'yes' : 'no',
+                'auth_user' => Auth::user() ? 'found' : 'not_found',
+                'request_user' => $request->user() ? 'found' : 'not_found'
+            ]);
             return null;
         }
 
-        return AuditLog::create([
-            'user_id' => $user->id,
-            'user_name' => $user->name ?? $user->full_name ?? 'Unknown User',
-            'action' => $action,
-            'model' => $model,
-            'model_id' => $modelId,
-            'description' => $description,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'old_values' => $oldValues,
-            'new_values' => $newValues,
-        ]);
+        try {
+            $auditLog = AuditLog::create([
+                'user_id' => $user->id,
+                'user_name' => $user->name ?? $user->full_name ?? 'Unknown User',
+                'action' => $action,
+                'model' => $model,
+                'model_id' => $modelId,
+                'description' => $description,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'old_values' => $oldValues,
+                'new_values' => $newValues,
+            ]);
+            
+            \Log::info('AuditLogService: Successfully created audit log', [
+                'id' => $auditLog->id,
+                'action' => $action,
+                'model' => $model,
+                'user_name' => $auditLog->user_name
+            ]);
+            
+            return $auditLog;
+        } catch (\Exception $e) {
+            \Log::error('AuditLogService: Failed to create audit log', [
+                'error' => $e->getMessage(),
+                'action' => $action,
+                'model' => $model,
+                'user_id' => $user->id ?? 'unknown'
+            ]);
+            return null;
+        }
     }
 
     /**
@@ -50,7 +94,8 @@ class AuditLogService
         string $model,
         string $modelId,
         ?string $description = null,
-        ?array $newValues = null
+        ?array $newValues = null,
+        ?Request $request = null
     ): ?AuditLog {
         return self::log(
             'Created',
@@ -58,7 +103,8 @@ class AuditLogService
             $modelId,
             $description ?? "Created new {$model} record",
             null,
-            $newValues
+            $newValues,
+            $request
         );
     }
 
@@ -70,7 +116,8 @@ class AuditLogService
         string $modelId,
         ?string $description = null,
         ?array $oldValues = null,
-        ?array $newValues = null
+        ?array $newValues = null,
+        ?Request $request = null
     ): ?AuditLog {
         return self::log(
             'Updated',
@@ -78,7 +125,8 @@ class AuditLogService
             $modelId,
             $description ?? "Updated {$model} record",
             $oldValues,
-            $newValues
+            $newValues,
+            $request
         );
     }
 
@@ -89,7 +137,8 @@ class AuditLogService
         string $model,
         string $modelId,
         ?string $description = null,
-        ?array $oldValues = null
+        ?array $oldValues = null,
+        ?Request $request = null
     ): ?AuditLog {
         return self::log(
             'Deleted',
@@ -97,7 +146,8 @@ class AuditLogService
             $modelId,
             $description ?? "Deleted {$model} record",
             $oldValues,
-            null
+            null,
+            $request
         );
     }
 
@@ -107,13 +157,17 @@ class AuditLogService
     public static function logViewed(
         string $model,
         string $modelId,
-        ?string $description = null
+        ?string $description = null,
+        ?Request $request = null
     ): ?AuditLog {
         return self::log(
             'Viewed',
             $model,
             $modelId,
-            $description ?? "Viewed {$model} record"
+            $description ?? "Viewed {$model} record",
+            null,
+            null,
+            $request
         );
     }
 

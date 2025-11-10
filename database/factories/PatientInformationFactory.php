@@ -40,3 +40,4 @@ class PatientInformationFactory extends Factory
     }
 }
 
+

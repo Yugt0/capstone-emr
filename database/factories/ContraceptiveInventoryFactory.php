@@ -66,3 +66,4 @@ class ContraceptiveInventoryFactory extends Factory
     }
 }
 
+

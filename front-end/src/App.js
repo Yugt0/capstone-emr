@@ -12,27 +12,45 @@ import PatientVaccineTracker from './pages/PatientVaccineTracker';
 import VaccineList from './pages/VaccineList';
 import ContraceptiveList from './pages/ContraceptiveList';
 import AuditLogTable from './pages/AuditLogTable';
-import FamilyPlanningList from './pages/FamilyPlanningList';
+import BackupSystem from './components/BackupSystem';
+import UserManagement from './pages/UserManagement';
+import DiseaseAnalytics from './pages/DiseaseAnalytics';
+import MissingDataPage from './pages/MissingDataPage';
 import Unauthorized from './pages/Unauthorized';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppContent() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, sidebarCollapsed, isMobile, mobileSidebarOpen } = useAuth();
 
   return (
     <div className="d-flex min-vh-100">
       {isAuthenticated() && (
-        <div className="col-md-3 col-lg-2 sidebar">
+        <div className={`
+          sidebar-container 
+          ${sidebarCollapsed ? 'collapsed' : ''} 
+          ${isMobile ? 'mobile-hidden' : ''}
+        `}>
           <Sidebar />
         </div>
       )}
-      <div className={isAuthenticated() ? "col-md-9 col-lg-10" : "col-12"}>
+      
+      {/* Mobile Sidebar - Always render on mobile */}
+      {isAuthenticated() && isMobile && (
+        <div className="mobile-sidebar-wrapper">
+          <Sidebar />
+        </div>
+      )}
+      <div className={`
+        main-content 
+        ${isAuthenticated() ? (sidebarCollapsed ? 'sidebar-collapsed' : 'sidebar-expanded') : 'no-sidebar'}
+        ${isMobile ? 'mobile-full-width' : ''}
+      `}>
         {isAuthenticated() && <Header />}
-        <Routes>
+        <div className="content-wrapper">
+          <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           
           {/* Protected Routes */}
@@ -66,12 +84,6 @@ function AppContent() {
             </ProtectedRoute>
           } />
           
-          <Route path="/family-planning-list" element={
-            <ProtectedRoute requiredPage="family-planning-list">
-              <FamilyPlanningList />
-            </ProtectedRoute>
-          } />
-          
           <Route path="/doctor-patient-list" element={
             <ProtectedRoute requiredPage="doctor-patient-list">
               <DoctorPatientList />
@@ -84,9 +96,40 @@ function AppContent() {
             </ProtectedRoute>
           } />
           
+          <Route path="/backup" element={
+            <ProtectedRoute requiredPage="backup">
+              <BackupSystem />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/user-management" element={
+            <ProtectedRoute requiredPage="user-management">
+              <UserManagement />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/register" element={
+            <ProtectedRoute requiredPage="register">
+              <Register />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/disease-analytics" element={
+            <ProtectedRoute requiredPage="disease-analytics">
+              <DiseaseAnalytics />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/missing-data" element={
+            <ProtectedRoute requiredPage="missing-data">
+              <MissingDataPage />
+            </ProtectedRoute>
+          } />
+          
           {/* Redirect to login if not authenticated */}
           <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+          </Routes>
+        </div>
       </div>
     </div>
   );

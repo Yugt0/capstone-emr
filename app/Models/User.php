@@ -27,6 +27,7 @@ class User extends Authenticatable
         'password',
         'role',
         'status',
+        'lockout_count',
         'last_login_at',
         'created_by',
         'notes',
@@ -54,5 +55,89 @@ class User extends Authenticatable
             'password' => 'hashed',
             'last_login_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if user is active
+     */
+    public function isActive()
+    {
+        return $this->status === 'active';
+    }
+
+    /**
+     * Check if user is suspended
+     */
+    public function isSuspended()
+    {
+        return $this->status === 'suspended';
+    }
+
+    /**
+     * Get user's role display name
+     */
+    public function getRoleDisplayName()
+    {
+        $roleNames = [
+            'admin' => 'Administrator',
+            'encoder' => 'Data Encoder',
+            'nursing_attendant' => 'Nursing Attendant',
+            'midwife' => 'Midwife',
+            'doctor' => 'Doctor',
+            'cold_chain_manager' => 'Cold Chain Manager'
+        ];
+
+        return $roleNames[$this->role] ?? $this->role;
+    }
+
+    /**
+     * Get user's status badge color
+     */
+    public function getStatusBadgeColor()
+    {
+        $colors = [
+            'active' => 'success',
+            'inactive' => 'secondary',
+            'suspended' => 'danger'
+        ];
+
+        return $colors[$this->status] ?? 'secondary';
+    }
+
+    /**
+     * Scope to get active users
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    /**
+     * Scope to get users by role
+     */
+    public function scopeByRole($query, $role)
+    {
+        return $query->where('role', $role);
+    }
+
+    /**
+     * Scope to search users
+     */
+    public function scopeSearch($query, $search)
+    {
+        return $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('full_name', 'like', "%{$search}%")
+              ->orWhere('username', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%");
+        });
     }
 }

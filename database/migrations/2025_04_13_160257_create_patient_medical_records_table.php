@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('patient_medical_records', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('patient_id')->constrained('patient_information')->onDelete('cascade');
+            $table->foreignId('patient_id')->constrained('patient-information')->onDelete('cascade');
             $table->string('temperature')->nullable();
             $table->text('patient_history')->nullable();
             $table->string('age')->nullable();
@@ -25,6 +25,7 @@ return new class extends Migration
             $table->text('history_of_present_illness')->nullable();
             $table->text('assessment')->nullable();
             $table->text('plan')->nullable();
+            $table->text('medicine_takes')->nullable();
             $table->timestamps();
         });
     }

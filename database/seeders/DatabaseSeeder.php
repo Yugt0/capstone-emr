@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             ComprehensiveDataSeeder::class,
             MedicalRecordsSeeder::class,
             VaccineTrackerDataSeeder::class,
+            LargeDatasetSeeder::class,
         ]);
     }
 }

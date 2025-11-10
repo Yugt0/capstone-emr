@@ -13,36 +13,43 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Role-based permissions configuration
   const rolePermissions = {
+    admin: {
+      canAccess: ['dashboard', 'register', 'user-management', 'audit-log', 'backup'],
+      displayName: 'Administrator'
+    },
     encoder: {
-      canAccess: ['dashboard', 'patientlist', 'patient-vaccine-tracker', 'vaccinelist', 'contraceptive-list', 'family-planning-list', 'doctor-patient-list', 'audit-log'],
+      canAccess: ['dashboard', 'patientlist', 'patient-vaccine-tracker', 'vaccinelist', 'contraceptive-list', 'family-planning-list', 'doctor-patient-list', 'disease-analytics', 'missing-data'],
       displayName: 'Encoder'
     },
     nursing_attendant: {
-      canAccess: ['dashboard', 'patientlist', 'audit-log'],
+      canAccess: ['dashboard', 'patientlist'],
       displayName: 'Nursing Attendant'
     },
     midwife: {
-      canAccess: ['dashboard', 'patientlist', 'doctor-patient-list', 'audit-log'],
+      canAccess: ['dashboard', 'patientlist', 'patient-vaccine-tracker', 'doctor-patient-list', 'missing-data'],
       displayName: 'Midwife'
     },
     doctor: {
-      canAccess: ['dashboard', 'doctor-patient-list', 'audit-log'],
+      canAccess: ['dashboard', 'doctor-patient-list', 'missing-data'],
       displayName: 'Doctor'
     },
     // Add common variations that might be returned by backend
     'doctor_user': {
-      canAccess: ['dashboard', 'doctor-patient-list', 'audit-log'],
+      canAccess: ['dashboard', 'doctor-patient-list', 'missing-data'],
       displayName: 'Doctor'
     },
     'Doctor': {
-      canAccess: ['dashboard', 'doctor-patient-list', 'audit-log'],
+      canAccess: ['dashboard', 'doctor-patient-list', 'missing-data'],
       displayName: 'Doctor'
     },
     cold_chain_manager: {
-      canAccess: ['dashboard', 'vaccinelist', 'contraceptive-list', 'patient-vaccine-tracker', 'audit-log'],
+      canAccess: ['dashboard', 'vaccinelist', 'contraceptive-list'],
       displayName: 'Cold Chain Manager'
     }
   };
@@ -207,6 +214,44 @@ export const AuthProvider = ({ children }) => {
     return displayName;
   };
 
+  // Toggle sidebar collapsed state
+  const toggleSidebar = () => {
+    if (isMobile) {
+      setMobileSidebarOpen(prev => !prev);
+    } else {
+      setSidebarCollapsed(prev => !prev);
+    }
+  };
+
+  // Toggle mobile sidebar
+  const toggleMobileSidebar = () => {
+    setMobileSidebarOpen(prev => !prev);
+  };
+
+  // Close mobile sidebar
+  const closeMobileSidebar = () => {
+    setMobileSidebarOpen(false);
+  };
+
+  // Handle responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      // Close mobile sidebar when switching to desktop
+      if (!mobile && mobileSidebarOpen) {
+        setMobileSidebarOpen(false);
+      }
+    };
+
+    // Initial check
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [mobileSidebarOpen]);
+
   // Initialize user from localStorage on app load
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -240,7 +285,13 @@ export const AuthProvider = ({ children }) => {
     getAccessiblePages,
     getRoleDisplayName,
     getToken,
-    loading
+    loading,
+    sidebarCollapsed,
+    toggleSidebar,
+    mobileSidebarOpen,
+    toggleMobileSidebar,
+    closeMobileSidebar,
+    isMobile
   };
 
   return (

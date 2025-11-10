@@ -45,24 +45,7 @@ class NewbornImmunizationController extends Controller
             
             $record = NewbornImmunization::create($data);
         
-        // Log the creation with detailed description
-        if (auth()->check()) {
-            AuditLogService::logCreated(
-                'NewbornImmunization',
-                $record->id,
-                "Added new newborn immunization record for patient ID: {$record->patient_id}",
-                $record->toArray()
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Created',
-                'NewbornImmunization',
-                $record->id,
-                "Added new newborn immunization record for patient ID: {$record->patient_id}",
-                null,
-                $record->toArray()
-            );
-        }
+        // Audit logging is handled automatically by the Auditable trait
         
             return response()->json($record, 201)
                 ->header('Access-Control-Allow-Origin', '*')
@@ -114,28 +97,9 @@ class NewbornImmunizationController extends Controller
             $data = $this->cleanNewbornData($request->all());
             
             $record = NewbornImmunization::findOrFail($id);
-            $oldData = $record->toArray();
             $record->update($data);
         
-        // Log the update with detailed description
-        if (auth()->check()) {
-            AuditLogService::logUpdated(
-                'NewbornImmunization',
-                $id,
-                "Updated newborn immunization record for patient ID: {$record->patient_id}",
-                $oldData,
-                $record->getChanges()
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Updated',
-                'NewbornImmunization',
-                $id,
-                "Updated newborn immunization record for patient ID: {$record->patient_id}",
-                $oldData,
-                $record->getChanges()
-            );
-        }
+        // Audit logging is handled automatically by the Auditable trait
         
             return response()->json($record, 200);
         } catch (\Exception $e) {
@@ -151,27 +115,9 @@ class NewbornImmunizationController extends Controller
     public function destroy($id)
     {
         $record = NewbornImmunization::findOrFail($id);
-        $patientId = $record->patient_id;
         $record->delete();
         
-        // Log the deletion with detailed description
-        if (auth()->check()) {
-            AuditLogService::logDeleted(
-                'NewbornImmunization',
-                $id,
-                "Deleted newborn immunization record for patient ID: {$patientId}",
-                ['patient_id' => $patientId, 'record_id' => $id]
-            );
-        } else {
-            AuditLogService::logSystemActivity(
-                'Deleted',
-                'NewbornImmunization',
-                $id,
-                "Deleted newborn immunization record for patient ID: {$patientId}",
-                ['patient_id' => $patientId, 'record_id' => $id],
-                null
-            );
-        }
+        // Audit logging is handled automatically by the Auditable trait
         
         return response()->json(null, 204);
     }

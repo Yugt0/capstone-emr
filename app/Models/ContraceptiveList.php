@@ -22,3 +22,6 @@ class ContraceptiveList extends Model
     ];
 }
 
+
+
+
