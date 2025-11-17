@@ -690,14 +690,6 @@ export const api = {
     return handleResponse(response);
   },
 
-  triggerAutomaticBackup: async () => {
-    const response = await fetch(`${API_BASE}/backup/trigger-automatic`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    });
-    return handleResponse(response);
-  },
-
   createFilesBackup: async () => {
     const response = await fetch(`${API_BASE}/backup/files`, {
       method: 'POST',

@@ -1574,55 +1574,58 @@ const Dashboard = () => {
                         })()}
                       </div>
                     </div>
-                    
+
                     {/* Low Stock Contraceptives */}
-                    <div className="expiry-notifications mt-3">
+                    <div className="expiry-notifications" style={{ marginTop: '1rem' }}>
                       <div className="notification-header">
                         <i className="bi bi-exclamation-triangle-fill text-danger me-2"></i>
-                        <strong>Low Stock Contraceptives</strong>
+                        <strong>Low Stock Contraceptives (&lt; 100 units)</strong>
                       </div>
-                      <div className="notification-list">
+                      <div className="notification-list" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                         {(() => {
-                          const lowStockContraceptives = inventoryData
-                            .filter(item => {
-                              const stock = item.quantity || 0;
-                              return stock < 50; // Low stock threshold
-                            })
-                            .sort((a, b) => (a.quantity || 0) - (b.quantity || 0));
+                          const lowStockItems = inventoryData.filter(item => {
+                            const stock = parseInt(item.quantity) || 0;
+                            return stock > 0 && stock < 100;
+                          });
                           
-                          return lowStockContraceptives.map((item, index) => {
-                            const stock = item.quantity || 0;
-                            const alertLevel = stock < 20 ? 'critical' : 'warning';
+                          if (lowStockItems.length === 0) {
+                            return (
+                              <div className="notification-item safe">
+                                <i className="bi bi-check-circle-fill text-success me-2"></i>
+                                No low stock items
+                              </div>
+                            );
+                          }
+                          
+                          // Sort by stock level (lowest first)
+                          lowStockItems.sort((a, b) => {
+                            const stockA = parseInt(a.quantity) || 0;
+                            const stockB = parseInt(b.quantity) || 0;
+                            return stockA - stockB;
+                          });
+                          
+                          return lowStockItems.map((item, index) => {
+                            const stock = parseInt(item.quantity) || 0;
+                            const alertLevel = stock <= 20 ? 'critical' : 
+                                             stock <= 50 ? 'warning' : 'attention';
                             
                             return (
                               <div key={index} className={`notification-item ${alertLevel}`}>
                                 <div className="notification-content">
                                   <span className="item-name">
                                     {item.contraceptive_name || `Item ${item.id}`}
-                                    {stock < 20 && <span className="expired-badge ms-2">CRITICAL</span>}
                                   </span>
                                   <span className="expiry-info">
-                                    {stock < 20 ? (
-                                      <>Critical: Only {stock} unit{stock !== 1 ? 's' : ''} remaining</>
-                                    ) : (
-                                      <>Low Stock: {stock} unit{stock !== 1 ? 's' : ''} remaining</>
-                                    )}
+                                    Low stock warning
                                   </span>
                                 </div>
-                                <div className="stock-count" style={{ color: stock < 20 ? '#dc3545' : '#ffc107', fontWeight: 'bold' }}>
+                                <div className="stock-count" style={{ color: stock <= 20 ? '#dc3545' : stock <= 50 ? '#ffc107' : '#fd7e14' }}>
                                   {stock} units
                                 </div>
                               </div>
                             );
                           });
                         })()}
-                        
-                        {inventoryData.filter(item => (item.quantity || 0) < 50).length === 0 && (
-                          <div className="notification-item safe">
-                            <i className="bi bi-check-circle-fill text-success me-2"></i>
-                            All contraceptives have adequate stock levels
-                          </div>
-                        )}
                       </div>
                     </div>
           </div>
@@ -1738,55 +1741,58 @@ const Dashboard = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Low Stock Vaccines */}
-                    <div className="expiry-notifications mt-3">
+                    <div className="expiry-notifications" style={{ marginTop: '1rem' }}>
                       <div className="notification-header">
                         <i className="bi bi-exclamation-triangle-fill text-danger me-2"></i>
-                        <strong>Low Stock Vaccines</strong>
+                        <strong>Low Stock Vaccines (&lt; 100 doses)</strong>
                       </div>
-                      <div className="notification-list">
+                      <div className="notification-list" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                         {(() => {
-                          const lowStockVaccines = vaccineInventory
-                            .filter(item => {
-                              const stock = item.remaining_balance || 0;
-                              return stock < 100; // Low stock threshold
-                            })
-                            .sort((a, b) => (a.remaining_balance || 0) - (b.remaining_balance || 0));
+                          const lowStockVaccines = vaccineInventory.filter(item => {
+                            const stock = parseInt(item.remaining_balance) || 0;
+                            return stock > 0 && stock < 100;
+                          });
+                          
+                          if (lowStockVaccines.length === 0) {
+                            return (
+                              <div className="notification-item safe">
+                                <i className="bi bi-check-circle-fill text-success me-2"></i>
+                                No low stock items
+                              </div>
+                            );
+                          }
+                          
+                          // Sort by stock level (lowest first)
+                          lowStockVaccines.sort((a, b) => {
+                            const stockA = parseInt(a.remaining_balance) || 0;
+                            const stockB = parseInt(b.remaining_balance) || 0;
+                            return stockA - stockB;
+                          });
                           
                           return lowStockVaccines.map((item, index) => {
-                            const stock = item.remaining_balance || 0;
-                            const alertLevel = stock < 50 ? 'critical' : 'warning';
+                            const stock = parseInt(item.remaining_balance) || 0;
+                            const alertLevel = stock <= 20 ? 'critical' : 
+                                             stock <= 50 ? 'warning' : 'attention';
                             
                             return (
                               <div key={index} className={`notification-item ${alertLevel}`}>
                                 <div className="notification-content">
                                   <span className="item-name">
                                     {item.product || `Vaccine ${item.id}`}
-                                    {stock < 50 && <span className="expired-badge ms-2">CRITICAL</span>}
                                   </span>
                                   <span className="expiry-info">
-                                    {stock < 50 ? (
-                                      <>Critical: Only {stock} dose{stock !== 1 ? 's' : ''} remaining</>
-                                    ) : (
-                                      <>Low Stock: {stock} dose{stock !== 1 ? 's' : ''} remaining</>
-                                    )}
+                                    Low stock warning
                                   </span>
                                 </div>
-                                <div className="stock-count" style={{ color: stock < 50 ? '#dc3545' : '#ffc107', fontWeight: 'bold' }}>
+                                <div className="stock-count" style={{ color: stock <= 20 ? '#dc3545' : stock <= 50 ? '#ffc107' : '#fd7e14' }}>
                                   {stock} doses
                                 </div>
                               </div>
                             );
                           });
                         })()}
-                        
-                        {vaccineInventory.filter(item => (item.remaining_balance || 0) < 100).length === 0 && (
-                          <div className="notification-item safe">
-                            <i className="bi bi-check-circle-fill text-success me-2"></i>
-                            All vaccines have adequate stock levels
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>

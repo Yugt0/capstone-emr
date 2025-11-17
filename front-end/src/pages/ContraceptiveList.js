@@ -105,7 +105,7 @@ const ContraceptiveList = () => {
     return lowStock;
   };
 
-  // Check for contraceptives nearing expiration (30 days prior)
+  // Check for contraceptives nearing expiration (6 months prior)
   const checkExpiringContraceptives = (contraceptiveList) => {
     if (!contraceptiveList || contraceptiveList.length === 0) {
       console.log('No contraceptive list provided or empty list');
@@ -115,13 +115,13 @@ const ContraceptiveList = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Reset time to start of day
     
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(today.getDate() + 30);
-    thirtyDaysFromNow.setHours(23, 59, 59, 999); // Set to end of day
+    const sixMonthsFromNow = new Date();
+    sixMonthsFromNow.setDate(today.getDate() + 180); // 6 months = 180 days
+    sixMonthsFromNow.setHours(23, 59, 59, 999); // Set to end of day
     
     console.log('=== CHECKING EXPIRING CONTRACEPTIVES ===');
     console.log('Today:', today.toISOString());
-    console.log('Thirty days from now:', thirtyDaysFromNow.toISOString());
+    console.log('Six months from now:', sixMonthsFromNow.toISOString());
     console.log('Total contraceptives to check:', contraceptiveList.length);
     
     const expiring = contraceptiveList.filter(contraceptive => {
@@ -150,7 +150,7 @@ const ContraceptiveList = () => {
       console.log('📊 Days until expiry:', daysUntilExpiry);
       
       // More robust expiration checking
-      const isExpiring = daysUntilExpiry >= 0 && daysUntilExpiry <= 30;
+      const isExpiring = daysUntilExpiry >= 0 && daysUntilExpiry <= 180; // 6 months = 180 days
       const hasStock = contraceptive.quantity > 0;
       
       // Additional debugging for edge cases
@@ -162,7 +162,7 @@ const ContraceptiveList = () => {
         console.log('🔥 Product expires within a week:', contraceptive.contraceptive_name, 'in', daysUntilExpiry, 'days');
       }
       
-      console.log('⏰ Is expiring (within 30 days):', isExpiring);
+      console.log('⏰ Is expiring (within 6 months):', isExpiring);
       console.log('📦 Has stock:', hasStock, '(quantity:', contraceptive.quantity, ')');
       
       const shouldInclude = isExpiring && hasStock;
@@ -976,7 +976,7 @@ const ContraceptiveList = () => {
                   Contraceptive Expiration Alert
                 </h6>
                 <p className="mb-2">
-                  The following contraceptives are nearing their expiration date (within 30 days):
+                  The following contraceptives are nearing their expiration date (within 6 months):
                 </p>
                 <div className="row">
                   {expiringContraceptives.slice(0, 3).map((contraceptive, idx) => (
@@ -1367,10 +1367,10 @@ const ContraceptiveList = () => {
                     </td>
                     <td className="text-end fw-semibold d-none d-md-table-cell">
                       <div className="expiration-cell">
-                        <span className={contraceptive.expiration_date && getDaysUntilExpiration(contraceptive.expiration_date) <= 30 ? 'text-warning fw-bold' : ''}>
+                        <span className={contraceptive.expiration_date && getDaysUntilExpiration(contraceptive.expiration_date) <= 180 ? 'text-warning fw-bold' : ''}>
                           {formatDate(contraceptive.expiration_date)}
                         </span>
-                        {contraceptive.expiration_date && getDaysUntilExpiration(contraceptive.expiration_date) <= 30 && (
+                        {contraceptive.expiration_date && getDaysUntilExpiration(contraceptive.expiration_date) <= 180 && (
                           <span className="badge bg-warning text-dark expiration-badge">
                             {getDaysUntilExpiration(contraceptive.expiration_date)}d
                           </span>

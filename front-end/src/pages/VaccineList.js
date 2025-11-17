@@ -119,7 +119,7 @@ const VaccineList = () => {
     return lowStock;
   };
 
-  // Check for vaccines nearing expiration (30 days prior)
+  // Check for vaccines nearing expiration (6 months prior)
   const checkExpiringVaccines = (vaccineList) => {
     if (!vaccineList || vaccineList.length === 0) {
       console.log('No vaccine list provided or empty list');
@@ -129,13 +129,13 @@ const VaccineList = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Reset time to start of day
     
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(today.getDate() + 30);
-    thirtyDaysFromNow.setHours(23, 59, 59, 999); // Set to end of day
+    const sixMonthsFromNow = new Date();
+    sixMonthsFromNow.setDate(today.getDate() + 180); // 6 months = 180 days
+    sixMonthsFromNow.setHours(23, 59, 59, 999); // Set to end of day
     
     console.log('=== CHECKING EXPIRING VACCINES ===');
     console.log('Today:', today.toISOString());
-    console.log('Thirty days from now:', thirtyDaysFromNow.toISOString());
+    console.log('Six months from now:', sixMonthsFromNow.toISOString());
     console.log('Total vaccines to check:', vaccineList.length);
     
     const expiring = vaccineList.filter(vaccine => {
@@ -164,7 +164,7 @@ const VaccineList = () => {
       console.log('📊 Days until expiry:', daysUntilExpiry);
       
       // More robust expiration checking
-      const isExpiring = daysUntilExpiry >= 0 && daysUntilExpiry <= 30;
+      const isExpiring = daysUntilExpiry >= 0 && daysUntilExpiry <= 180; // 6 months = 180 days
       const hasStock = vaccine.remaining_balance > 0;
       
       // Additional debugging for edge cases
@@ -176,7 +176,7 @@ const VaccineList = () => {
         console.log('🔥 Product expires within a week:', vaccine.product, 'in', daysUntilExpiry, 'days');
       }
       
-      console.log('⏰ Is expiring (within 30 days):', isExpiring);
+      console.log('⏰ Is expiring (within 6 months):', isExpiring);
       console.log('📦 Has stock:', hasStock, '(remaining_balance:', vaccine.remaining_balance, ')');
       
       const shouldInclude = isExpiring && hasStock;
@@ -1113,7 +1113,7 @@ const VaccineList = () => {
                   Vaccine Expiration Alert
                 </h6>
                 <p className="mb-2" style={{ color: '#856404' }}>
-                  The following vaccines are nearing their expiration date (within 30 days):
+                  The following vaccines are nearing their expiration date (within 6 months):
                 </p>
                 <div className="row">
                   {expiringVaccines.slice(0, 3).map((vaccine, idx) => (
@@ -1481,10 +1481,10 @@ const VaccineList = () => {
                         justifyContent: 'flex-end',
                         gap: '8px'
                       }}>
-                        <span className={vaccine.expiration_date && getDaysUntilExpiration(vaccine.expiration_date) <= 30 ? 'text-warning fw-bold' : ''}>
+                        <span className={vaccine.expiration_date && getDaysUntilExpiration(vaccine.expiration_date) <= 180 ? 'text-warning fw-bold' : ''}>
                           {vaccine.expiration_date}
                         </span>
-                        {vaccine.expiration_date && getDaysUntilExpiration(vaccine.expiration_date) <= 30 && (
+                        {vaccine.expiration_date && getDaysUntilExpiration(vaccine.expiration_date) <= 180 && (
                           <span className="badge bg-warning text-dark" style={{ fontSize: '0.7rem' }}>
                             {getDaysUntilExpiration(vaccine.expiration_date)}d
                           </span>

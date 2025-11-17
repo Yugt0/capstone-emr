@@ -717,34 +717,6 @@ class BackupController extends Controller
     }
 
     /**
-     * Manually trigger automatic backup (for testing or manual execution)
-     */
-    public function triggerAutomaticBackup(Request $request): JsonResponse
-    {
-        try {
-            $user = $request->user();
-            
-            \Log::info("Manual automatic backup triggered by user: {$user->name}");
-            
-            // Run the backup command
-            Artisan::call('backup:daily-database');
-            $output = Artisan::output();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Automatic backup triggered successfully. Check the dashboard for status.',
-                'output' => $output
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Failed to trigger automatic backup: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to trigger automatic backup: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
      * Check and trigger automatic backup if needed
      * This ensures backups work even when cron job is not running
      */
@@ -754,18 +726,12 @@ class BackupController extends Controller
             // Set timezone to Philippine Time
             $now = Carbon::now('Asia/Manila');
             
-            // Check if it's after 11:50 PM today
-            $backupTime = Carbon::today('Asia/Manila')->setTime(23, 50, 0);
+            // Check if it's after 7:00 AM today
+            $backupTime = Carbon::today('Asia/Manila')->setTime(7, 0, 0);
             
-            // Check if current time is at or after backup time
+            // Only check if current time is after 7:00 AM
             if ($now->lt($backupTime)) {
                 return; // Too early, backup hasn't been scheduled yet today
-            }
-            
-            // Check if we're within 1 minute window (11:50:00 to 11:50:59)
-            $oneMinuteAfter = $backupTime->copy()->addMinute();
-            if ($now->gt($oneMinuteAfter)) {
-                return; // Too late, already past the 1-minute window
             }
             
             // Check if a backup has already run today
@@ -780,7 +746,7 @@ class BackupController extends Controller
                 return;
             }
             
-            // Check if we're within a reasonable time window (11:26 PM to 11:59 PM)
+            // Check if we're within a reasonable time window (7:00 AM to 11:59 PM)
             // This prevents triggering backups from previous days
             $endOfDay = Carbon::today('Asia/Manila')->setTime(23, 59, 59);
             
@@ -809,9 +775,7 @@ class BackupController extends Controller
                     // Run in background (Windows compatible)
                     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
                         // Windows: use start command to run in background
-                        // Use PowerShell for better compatibility
-                        $psCommand = "Start-Process -FilePath " . escapeshellarg($phpPath) . " -ArgumentList " . escapeshellarg($artisanPath . ' backup:daily-database') . " -WindowStyle Hidden -NoNewWindow";
-                        pclose(popen("powershell -Command " . escapeshellarg($psCommand), "r"));
+                        pclose(popen("start /B " . $command, "r"));
                     } else {
                         // Linux/Mac: use nohup or & to run in background
                         exec($command . " > /dev/null 2>&1 &");
@@ -820,11 +784,7 @@ class BackupController extends Controller
             } catch (\Exception $e) {
                 // Fallback: run synchronously if background execution fails
                 \Log::warning('Could not run backup in background, running synchronously: ' . $e->getMessage());
-                try {
-                    Artisan::call('backup:daily-database');
-                } catch (\Exception $syncError) {
-                    \Log::error('Synchronous backup execution also failed: ' . $syncError->getMessage());
-                }
+                Artisan::call('backup:daily-database');
             }
             
         } catch (\Exception $e) {
