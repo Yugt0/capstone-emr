@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->api(append: [
             \App\Http\Middleware\Cors::class,
+            \App\Http\Middleware\AutomaticBackupCheck::class,
         ]);
         $middleware->web(append: [
             \App\Http\Middleware\Cors::class,

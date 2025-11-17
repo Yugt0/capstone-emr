@@ -37,9 +37,9 @@ const VaccineList = () => {
   const [editIndex, setEditIndex] = useState(null);
   const [selectedVaccineForUse, setSelectedVaccineForUse] = useState(null);
   const [useQuantity, setUseQuantity] = useState("");
-  const [showExpirationAlert, setShowExpirationAlert] = useState(false);
+  const [showExpirationAlert, setShowExpirationAlert] = useState(true);
   const [expiringVaccines, setExpiringVaccines] = useState([]);
-  const [showLowStockAlert, setShowLowStockAlert] = useState(false);
+  const [showLowStockAlert, setShowLowStockAlert] = useState(true);
   const [lowStockVaccines, setLowStockVaccines] = useState([]);
   const [showToastNotification, setShowToastNotification] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -287,7 +287,7 @@ const VaccineList = () => {
         if (expiring.length > 0) {
           console.log('⚠️ Found expiring vaccines, setting alert');
           setExpiringVaccines(expiring);
-          setShowExpirationAlert(true);
+          setShowExpirationAlert(true); // Always show when items exist
           
           // Show automatic notification
           setTimeout(() => {
@@ -306,7 +306,7 @@ const VaccineList = () => {
         if (lowStock.length > 0) {
           console.log('📦 Found low stock vaccines, setting alert');
           setLowStockVaccines(lowStock);
-          setShowLowStockAlert(true);
+          setShowLowStockAlert(true); // Always show when items exist
           
           // Show automatic notification
           setTimeout(() => {
@@ -339,7 +339,7 @@ const VaccineList = () => {
       
       if (expiring.length > 0) {
         setExpiringVaccines(expiring);
-        setShowExpirationAlert(true);
+        setShowExpirationAlert(true); // Always show when items exist
         
         // Only show notification if count changed
         if (expiring.length !== expiringVaccines.length) {
@@ -357,7 +357,7 @@ const VaccineList = () => {
       
       if (lowStock.length > 0) {
         setLowStockVaccines(lowStock);
-        setShowLowStockAlert(true);
+        setShowLowStockAlert(true); // Always show when items exist
         
         // Only show notification if count changed
         if (lowStock.length !== lowStockVaccines.length) {
@@ -377,7 +377,7 @@ const VaccineList = () => {
         const expiring = checkExpiringVaccines(vaccines);
         if (expiring.length > 0) {
           setExpiringVaccines(expiring);
-          setShowExpirationAlert(true);
+          setShowExpirationAlert(true); // Always show when items exist
         } else {
           setExpiringVaccines([]);
           setShowExpirationAlert(false);
@@ -386,7 +386,7 @@ const VaccineList = () => {
         const lowStock = checkLowStockVaccines(vaccines);
         if (lowStock.length > 0) {
           setLowStockVaccines(lowStock);
-          setShowLowStockAlert(true);
+          setShowLowStockAlert(true); // Always show when items exist
         } else {
           setLowStockVaccines([]);
           setShowLowStockAlert(false);
@@ -874,8 +874,14 @@ const VaccineList = () => {
               <button
                 className={`btn btn-outline-warning position-relative ${(expiringVaccines.length > 0 || lowStockVaccines.length > 0) ? 'notification-bell-pulse' : ''}`}
                 onClick={() => {
-                  setShowExpirationAlert(!showExpirationAlert);
-                  setShowLowStockAlert(!showLowStockAlert);
+                  // Scroll to alerts instead of toggling
+                  const expirationAlert = document.querySelector('.alert-warning');
+                  const lowStockAlert = document.querySelector('.alert-danger');
+                  if (expirationAlert) {
+                    expirationAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  } else if (lowStockAlert) {
+                    lowStockAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
                 }}
                 style={{
                   borderRadius: '50%',
@@ -1169,27 +1175,7 @@ const VaccineList = () => {
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={() => setShowExpirationAlert(false)}
-              style={{
-                position: 'absolute',
-                top: '15px',
-                right: '15px',
-                background: 'rgba(255, 193, 7, 0.2)',
-                border: 'none',
-                borderRadius: '50%',
-                width: '30px',
-                height: '30px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#856404'
-              }}
-            >
-              <i className="fas fa-times"></i>
-            </button>
+            {/* Remove close button - alerts should always be visible when items exist */}
           </div>
         )}
 
@@ -1286,27 +1272,7 @@ const VaccineList = () => {
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={() => setShowLowStockAlert(false)}
-              style={{
-                position: 'absolute',
-                top: '15px',
-                right: '15px',
-                background: 'rgba(220, 53, 69, 0.2)',
-                border: 'none',
-                borderRadius: '50%',
-                width: '30px',
-                height: '30px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#721c24'
-              }}
-            >
-              <i className="fas fa-times"></i>
-            </button>
+            {/* Remove close button - alerts should always be visible when items exist */}
           </div>
         )}
 

@@ -60,6 +60,25 @@ const BackupSystem = () => {
     }
   };
 
+  const triggerAutomaticBackup = async () => {
+    if (!window.confirm('This will trigger an automatic backup now. Continue?')) return;
+    
+    try {
+      setLoading(true);
+      const response = await api.triggerAutomaticBackup();
+      
+      showMessage('success', response.message || 'Automatic backup triggered successfully. Please refresh the page in a few moments to see the status.');
+      // Refresh data after a short delay to allow backup to complete
+      setTimeout(() => {
+        loadBackupData();
+      }, 3000);
+    } catch (error) {
+      showMessage('error', 'Failed to trigger automatic backup: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const downloadBackup = async (backupName) => {
     try {
       const response = await api.downloadBackup(backupName);
@@ -271,8 +290,15 @@ const BackupSystem = () => {
                   <div className="alert alert-info mb-3 d-flex align-items-center">
                     <i className="bi bi-clock-history me-2 fs-5"></i>
                     <div>
-                      <strong>Automatic Daily Backup:</strong> Database backups are automatically created every day at 7:00 AM Philippine Time.
-                      You can also create manual backups at any time using the "Create Backup" tab.
+                      <strong>Automatic Daily Backup:</strong> Database backups are automatically created every day at 11:50 PM Philippine Time.
+                      <br />
+                      <small className="text-muted">
+                        The system automatically checks for backups on every API request. 
+                        For best results, you can also run the <code>backup-service.bat</code> script in the project root 
+                        to ensure backups run even when the application is idle.
+                      </small>
+                      <br />
+                      <small>You can also create manual backups at any time using the "Create Backup" tab.</small>
                     </div>
                   </div>
                   
@@ -280,10 +306,24 @@ const BackupSystem = () => {
                   {automaticBackupInfo && (
                     <div className="card border-0 shadow-sm">
                       <div className="card-body">
-                        <h6 className="card-title mb-3 d-flex align-items-center">
-                          <i className="bi bi-check-circle text-success me-2"></i>
-                          Automatic Backup Status
-                        </h6>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <h6 className="card-title mb-0 d-flex align-items-center">
+                            <i className="bi bi-check-circle text-success me-2"></i>
+                            Automatic Backup Status
+                            <span className="badge bg-success ms-2" style={{ fontSize: '0.7rem' }}>
+                              Fully Automatic
+                            </span>
+                          </h6>
+                          <button
+                            onClick={triggerAutomaticBackup}
+                            disabled={loading}
+                            className="btn btn-sm btn-outline-secondary"
+                            title="Test backup manually (backups run automatically)"
+                          >
+                            <i className="bi bi-play-circle me-1"></i>
+                            Test Now
+                          </button>
+                        </div>
                         <div className="row g-3">
                           <div className="col-md-6">
                             <div className="d-flex justify-content-between align-items-center">
@@ -329,7 +369,7 @@ const BackupSystem = () => {
                         {automaticBackupInfo.total_automatic_backups === 0 && (
                           <div className="alert alert-secondary mt-3 mb-0">
                             <i className="bi bi-info-circle me-2"></i>
-                            <strong>No automatic backups yet.</strong> The first automatic backup will run at 7:00 AM Philippine Time.
+                            <strong>No automatic backups yet.</strong> The first automatic backup will run at 11:50 PM Philippine Time.
                           </div>
                         )}
                       </div>

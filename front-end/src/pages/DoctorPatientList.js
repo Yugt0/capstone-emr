@@ -199,6 +199,10 @@ export default function DoctorPatientList() {
   const [availableMedicalRecords, setAvailableMedicalRecords] = useState([]);
   const [selectedMedicalRecordId, setSelectedMedicalRecordId] = useState(null);
   const [medicalRecords, setMedicalRecords] = useState([]);
+  const [recentMedications, setRecentMedications] = useState([]);
+  const [medicationSuggestions, setMedicationSuggestions] = useState([]);
+  const [showMedicationSuggestions, setShowMedicationSuggestions] = useState(false);
+  const [isLoadingMedications, setIsLoadingMedications] = useState(false);
   const [searchName, setSearchName] = useState("");
   const [searchDate, setSearchDate] = useState("");
   const [searchAge, setSearchAge] = useState("");
@@ -233,7 +237,64 @@ export default function DoctorPatientList() {
   // Fetch patients and their medical records
   useEffect(() => {
     fetchPatients();
+    // Don't fetch medications on mount - only fetch when modal opens
   }, []);
+
+  // Fetch all recent medications from all patients (optimized)
+  const fetchRecentMedications = async (forceRefresh = false) => {
+    // Don't refetch if we already have medications and not forcing refresh
+    if (!forceRefresh && recentMedications.length > 0) {
+      return;
+    }
+    
+    // Prevent multiple simultaneous fetches
+    if (isLoadingMedications) {
+      return;
+    }
+    
+    setIsLoadingMedications(true);
+    try {
+      const allRecords = await api.getMedicalRecords();
+      
+      // Use Map to track medication -> latest date in one pass (much faster)
+      const medicationMap = new Map();
+      
+      // Single pass through records to extract medications and track latest dates
+      allRecords.forEach(record => {
+        if (record.medicine_takes && record.medicine_takes.trim() !== '') {
+          const recordDate = new Date(record.created_at);
+          // Split by newlines or semicolons to get individual medications
+          const meds = record.medicine_takes
+            .split(/[\n;]/)
+            .map(med => med.trim())
+            .filter(med => med.length > 0);
+          
+          meds.forEach(med => {
+            if (med.length > 0) {
+              // Update map with latest date for this medication
+              const existing = medicationMap.get(med);
+              if (!existing || recordDate > existing.date) {
+                medicationMap.set(med, { medication: med, date: recordDate });
+              }
+            }
+          });
+        }
+      });
+      
+      // Convert to array and sort by date (most recent first), limit to 50
+      const sortedMedications = Array.from(medicationMap.values())
+        .sort((a, b) => b.date - a.date)
+        .slice(0, 50)
+        .map(item => item.medication);
+      
+      setRecentMedications(sortedMedications);
+    } catch (error) {
+      console.error('Error fetching recent medications:', error);
+      setRecentMedications([]);
+    } finally {
+      setIsLoadingMedications(false);
+    }
+  };
 
   useEffect(() => {
     setFilteredPatients(patients);
@@ -351,8 +412,10 @@ export default function DoctorPatientList() {
   const handleModalOpen = async (modalType, patientId) => {
     setIsLoadingMedicalRecords(true);
     try {
+      // Always fetch medical records first (required for modal)
       await fetchMedicalRecords(patientId);
-      // Open modal after data is loaded
+      
+      // Open modal immediately - don't wait for medications
       switch(modalType) {
         case 'assessment':
           setAddAssessmentModal(true);
@@ -362,6 +425,10 @@ export default function DoctorPatientList() {
           break;
         case 'medication':
           setAddMedicationModal(true);
+          // Fetch medications in background (non-blocking, uses cache if available)
+          fetchRecentMedications().catch(err => {
+            console.error('Error loading medications in background:', err);
+          });
           break;
       }
     } catch (err) {
@@ -608,6 +675,18 @@ export default function DoctorPatientList() {
     const { name, value } = e.target;
     setMedicationForm({ ...medicationForm, [name]: value });
     
+    // Filter suggestions based on input
+    if (name === 'medication' && value.trim().length > 0) {
+      const filtered = recentMedications.filter(med =>
+        med.toLowerCase().includes(value.toLowerCase())
+      );
+      setMedicationSuggestions(filtered.slice(0, 10)); // Show top 10 matches
+      setShowMedicationSuggestions(true);
+    } else if (name === 'medication' && value.trim().length === 0) {
+      setMedicationSuggestions([]);
+      setShowMedicationSuggestions(false);
+    }
+    
     // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors(prev => {
@@ -616,6 +695,12 @@ export default function DoctorPatientList() {
         return newErrors;
       });
     }
+  };
+
+  const handleMedicationSuggestionClick = (suggestion) => {
+    setMedicationForm({ ...medicationForm, medication: suggestion });
+    setShowMedicationSuggestions(false);
+    setMedicationSuggestions([]);
   };
 
   const handleMedicalRecordSelection = (e) => {
@@ -638,6 +723,8 @@ export default function DoctorPatientList() {
     setMedicationForm({});
     setSelectedMedicalRecordId(null);
     setAvailableMedicalRecords([]);
+    setShowMedicationSuggestions(false);
+    setMedicationSuggestions([]);
   };
 
   // Real-time validation functions
@@ -5500,28 +5587,89 @@ export default function DoctorPatientList() {
                   </select>
                   <small className="text-muted">Select the medical record you want to add medication to.</small>
                 </div>
-                <div className="mb-4">
+                <div className="mb-4" style={{ position: 'relative' }}>
                   <label className="form-label fw-bold" style={{ color: '#374151', marginBottom: '0.5rem' }}>
                     Medication
                   </label>
-                  <textarea
-                    name="medication"
-                    value={medicationForm.medication || ''}
-                    onChange={handleMedicationFormChange}
-                    className="form-control"
-                    rows="8"
-                    placeholder="Enter medication details including drug name, dosage, frequency, duration, and any special instructions..."
-                    style={{
-                      border: '2px solid #e5e7eb',
-                      borderRadius: '12px',
-                      padding: '1rem',
-                      fontSize: '14px',
-                      resize: 'vertical',
-                      minHeight: '200px'
-                    }}
-                    required
-                  />
-                  <small className="text-muted">Provide detailed medication information including drug name, dosage, frequency, duration, and any special instructions or warnings.</small>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      name="medication"
+                      value={medicationForm.medication || ''}
+                      onChange={handleMedicationFormChange}
+                      onFocus={() => {
+                        if (medicationForm.medication && medicationForm.medication.trim().length > 0) {
+                          const filtered = recentMedications.filter(med =>
+                            med.toLowerCase().includes(medicationForm.medication.toLowerCase())
+                          );
+                          setMedicationSuggestions(filtered.slice(0, 10));
+                          setShowMedicationSuggestions(true);
+                        } else {
+                          // Show all recent medications when field is empty and focused
+                          setMedicationSuggestions(recentMedications.slice(0, 10));
+                          setShowMedicationSuggestions(true);
+                        }
+                      }}
+                      onBlur={() => {
+                        // Delay hiding suggestions to allow click events
+                        setTimeout(() => setShowMedicationSuggestions(false), 200);
+                      }}
+                      className="form-control"
+                      placeholder="Start typing to see recent medications..."
+                      style={{
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '12px',
+                        padding: '0.75rem 1rem',
+                        fontSize: '14px',
+                        width: '100%'
+                      }}
+                      required
+                      autoComplete="off"
+                    />
+                    {showMedicationSuggestions && medicationSuggestions.length > 0 && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          zIndex: 1000,
+                          backgroundColor: 'white',
+                          border: '2px solid #e5e7eb',
+                          borderRadius: '12px',
+                          marginTop: '4px',
+                          maxHeight: '300px',
+                          overflowY: 'auto',
+                          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
+                        }}
+                      >
+                        {medicationSuggestions.map((suggestion, index) => (
+                          <div
+                            key={index}
+                            onClick={() => handleMedicationSuggestionClick(suggestion)}
+                            style={{
+                              padding: '12px 16px',
+                              cursor: 'pointer',
+                              borderBottom: index < medicationSuggestions.length - 1 ? '1px solid #e5e7eb' : 'none',
+                              transition: 'background-color 0.2s ease',
+                              fontSize: '14px',
+                              color: '#374151'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.backgroundColor = '#f3f4f6';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.backgroundColor = 'white';
+                            }}
+                          >
+                            <i className="bi bi-capsule me-2" style={{ color: '#8b5cf6' }}></i>
+                            {suggestion}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <small className="text-muted">Start typing to see suggestions from recent medications. Provide detailed medication information including drug name, dosage, frequency, duration, and any special instructions or warnings.</small>
                 </div>
                 <div className="modal-footer d-flex justify-content-end" style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1.5rem' }}>
                   <button type="submit" className="btn btn-success" style={{

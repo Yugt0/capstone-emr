@@ -79,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/backup/full', [BackupController::class, 'createFullBackup']);
     Route::post('/backup/database', [BackupController::class, 'createDatabaseBackup']);
     Route::post('/backup/files', [BackupController::class, 'createFilesBackup']);
+    Route::post('/backup/trigger-automatic', [BackupController::class, 'triggerAutomaticBackup']);
     Route::get('/backup/list', [BackupController::class, 'getAvailableBackups']);
     Route::get('/backup/download/{backupName}', [BackupController::class, 'downloadBackup']);
     Route::delete('/backup/delete/{backupName}', [BackupController::class, 'deleteBackup']);

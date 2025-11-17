@@ -23,6 +23,9 @@ class BackupController extends Controller
     public function index(): JsonResponse
     {
         try {
+            // Check and trigger automatic backup if needed (works even when cron is offline)
+            $this->checkAndTriggerAutomaticBackup();
+            
             $backupStats = $this->getBackupStatistics();
             $systemInfo = $this->getSystemInformation();
             $automaticBackupInfo = $this->getAutomaticBackupInfo();
@@ -710,6 +713,123 @@ class BackupController extends Controller
                 'success' => false,
                 'error' => 'Backup creation failed: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Manually trigger automatic backup (for testing or manual execution)
+     */
+    public function triggerAutomaticBackup(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            \Log::info("Manual automatic backup triggered by user: {$user->name}");
+            
+            // Run the backup command
+            Artisan::call('backup:daily-database');
+            $output = Artisan::output();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Automatic backup triggered successfully. Check the dashboard for status.',
+                'output' => $output
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to trigger automatic backup: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to trigger automatic backup: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check and trigger automatic backup if needed
+     * This ensures backups work even when cron job is not running
+     */
+    private function checkAndTriggerAutomaticBackup(): void
+    {
+        try {
+            // Set timezone to Philippine Time
+            $now = Carbon::now('Asia/Manila');
+            
+            // Check if it's after 11:50 PM today
+            $backupTime = Carbon::today('Asia/Manila')->setTime(23, 50, 0);
+            
+            // Check if current time is at or after backup time
+            if ($now->lt($backupTime)) {
+                return; // Too early, backup hasn't been scheduled yet today
+            }
+            
+            // Check if we're within 1 minute window (11:50:00 to 11:50:59)
+            $oneMinuteAfter = $backupTime->copy()->addMinute();
+            if ($now->gt($oneMinuteAfter)) {
+                return; // Too late, already past the 1-minute window
+            }
+            
+            // Check if a backup has already run today
+            $todayBackup = DB::table('audit_logs')
+                ->where('action', 'daily-automatic-backup')
+                ->where('description', 'like', '%completed successfully%')
+                ->whereDate('created_at', $now->toDateString())
+                ->first();
+            
+            // If backup already ran today, skip
+            if ($todayBackup) {
+                return;
+            }
+            
+            // Check if we're within a reasonable time window (11:26 PM to 11:59 PM)
+            // This prevents triggering backups from previous days
+            $endOfDay = Carbon::today('Asia/Manila')->setTime(23, 59, 59);
+            
+            if ($now->gt($endOfDay)) {
+                return; // Past today, don't trigger
+            }
+            
+            // Trigger the backup in the background
+            // Use dispatch to run it asynchronously so it doesn't block the dashboard load
+            \Log::info('Automatic backup triggered via dashboard check (cron fallback)');
+            
+            // Run the backup command asynchronously to avoid blocking dashboard load
+            // For Windows/offline systems, we use dispatch_now which runs immediately but doesn't block
+            try {
+                // Try to dispatch as a job first (if queues are available)
+                if (config('queue.default') !== 'sync') {
+                    \Illuminate\Support\Facades\Queue::push(function() {
+                        Artisan::call('backup:daily-database');
+                    });
+                } else {
+                    // If queues aren't available, run in background using exec (Windows compatible)
+                    $phpPath = PHP_BINARY;
+                    $artisanPath = base_path('artisan');
+                    $command = escapeshellarg($phpPath) . ' ' . escapeshellarg($artisanPath) . ' backup:daily-database';
+                    
+                    // Run in background (Windows compatible)
+                    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                        // Windows: use start command to run in background
+                        // Use PowerShell for better compatibility
+                        $psCommand = "Start-Process -FilePath " . escapeshellarg($phpPath) . " -ArgumentList " . escapeshellarg($artisanPath . ' backup:daily-database') . " -WindowStyle Hidden -NoNewWindow";
+                        pclose(popen("powershell -Command " . escapeshellarg($psCommand), "r"));
+                    } else {
+                        // Linux/Mac: use nohup or & to run in background
+                        exec($command . " > /dev/null 2>&1 &");
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fallback: run synchronously if background execution fails
+                \Log::warning('Could not run backup in background, running synchronously: ' . $e->getMessage());
+                try {
+                    Artisan::call('backup:daily-database');
+                } catch (\Exception $syncError) {
+                    \Log::error('Synchronous backup execution also failed: ' . $syncError->getMessage());
+                }
+            }
+            
+        } catch (\Exception $e) {
+            // Log error but don't fail the dashboard load
+            \Log::error('Failed to check/trigger automatic backup: ' . $e->getMessage());
         }
     }
 

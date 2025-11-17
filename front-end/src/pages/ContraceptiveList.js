@@ -37,9 +37,9 @@ const ContraceptiveList = () => {
   const [editIndex, setEditIndex] = useState(null);
   const [selectedContraceptiveForUse, setSelectedContraceptiveForUse] = useState(null);
   const [useQuantity, setUseQuantity] = useState("");
-  const [showExpirationAlert, setShowExpirationAlert] = useState(false);
+  const [showExpirationAlert, setShowExpirationAlert] = useState(true);
   const [expiringContraceptives, setExpiringContraceptives] = useState([]);
-  const [showLowStockAlert, setShowLowStockAlert] = useState(false);
+  const [showLowStockAlert, setShowLowStockAlert] = useState(true);
   const [lowStockContraceptives, setLowStockContraceptives] = useState([]);
   const [showToastNotification, setShowToastNotification] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -279,7 +279,7 @@ const ContraceptiveList = () => {
         if (expiring.length > 0) {
           console.log('⚠️ Found expiring contraceptives, setting alert');
           setExpiringContraceptives(expiring);
-          setShowExpirationAlert(true);
+          setShowExpirationAlert(true); // Always show when items exist
           
           // Show automatic notification
           setTimeout(() => {
@@ -298,7 +298,7 @@ const ContraceptiveList = () => {
         if (lowStock.length > 0) {
           console.log('📦 Found low stock contraceptives, setting alert');
           setLowStockContraceptives(lowStock);
-          setShowLowStockAlert(true);
+          setShowLowStockAlert(true); // Always show when items exist
           
           // Show automatic notification
           setTimeout(() => {
@@ -331,7 +331,7 @@ const ContraceptiveList = () => {
       
       if (expiring.length > 0) {
         setExpiringContraceptives(expiring);
-        setShowExpirationAlert(true);
+        setShowExpirationAlert(true); // Always show when items exist
         
         // Only show notification if count changed
         if (expiring.length !== expiringContraceptives.length) {
@@ -349,7 +349,7 @@ const ContraceptiveList = () => {
       
       if (lowStock.length > 0) {
         setLowStockContraceptives(lowStock);
-        setShowLowStockAlert(true);
+        setShowLowStockAlert(true); // Always show when items exist
         
         // Only show notification if count changed
         if (lowStock.length !== lowStockContraceptives.length) {
@@ -369,7 +369,7 @@ const ContraceptiveList = () => {
         const expiring = checkExpiringContraceptives(contraceptives);
         if (expiring.length > 0) {
           setExpiringContraceptives(expiring);
-          setShowExpirationAlert(true);
+          setShowExpirationAlert(true); // Always show when items exist
         } else {
           setExpiringContraceptives([]);
           setShowExpirationAlert(false);
@@ -378,7 +378,7 @@ const ContraceptiveList = () => {
         const lowStock = checkLowStockContraceptives(contraceptives);
         if (lowStock.length > 0) {
           setLowStockContraceptives(lowStock);
-          setShowLowStockAlert(true);
+          setShowLowStockAlert(true); // Always show when items exist
         } else {
           setLowStockContraceptives([]);
           setShowLowStockAlert(false);
@@ -807,8 +807,14 @@ const ContraceptiveList = () => {
               <button
                 className={`btn btn-outline-warning position-relative notification-bell ${(expiringContraceptives.length > 0 || lowStockContraceptives.length > 0) ? 'notification-bell-pulse' : ''}`}
                 onClick={() => {
-                  setShowExpirationAlert(!showExpirationAlert);
-                  setShowLowStockAlert(!showLowStockAlert);
+                  // Scroll to alerts instead of toggling
+                  const expirationAlert = document.querySelector('.expiration-alert');
+                  const lowStockAlert = document.querySelector('.alert-danger');
+                  if (expirationAlert) {
+                    expirationAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  } else if (lowStockAlert) {
+                    lowStockAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
                 }}
                 onMouseOver={(e) => {
                   e.target.style.background = '#ffc107';
@@ -1027,13 +1033,7 @@ const ContraceptiveList = () => {
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              className="btn-close alert-close"
-              onClick={() => setShowExpirationAlert(false)}
-            >
-              <i className="fas fa-times"></i>
-            </button>
+            {/* Remove close button - alerts should always be visible when items exist */}
           </div>
         )}
 
@@ -1130,27 +1130,7 @@ const ContraceptiveList = () => {
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={() => setShowLowStockAlert(false)}
-              style={{
-                position: 'absolute',
-                top: '15px',
-                right: '15px',
-                background: 'rgba(220, 53, 69, 0.2)',
-                border: 'none',
-                borderRadius: '50%',
-                width: '30px',
-                height: '30px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#721c24'
-              }}
-            >
-              <i className="fas fa-times"></i>
-            </button>
+            {/* Remove close button - alerts should always be visible when items exist */}
           </div>
         )}
 

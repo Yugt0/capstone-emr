@@ -188,3 +188,4 @@ If automatic backups are not working:
 4. Ensure mysqldump is installed and accessible
 5. Check file permissions on `storage/app/backups/` directory
 
+
