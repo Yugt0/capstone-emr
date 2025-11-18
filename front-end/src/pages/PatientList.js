@@ -118,6 +118,27 @@ export default function PatientList() {
     return newErrors;
   };
 
+  // Helper function to get the latest medical record's age
+  const getLatestMedicalRecordAge = () => {
+    if (!selectedPatient || !medicalRecords || medicalRecords.length === 0) {
+      return null;
+    }
+    
+    // Sort records by date (newest first) and get the latest one
+    const sortedRecords = [...medicalRecords].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const latestRecord = sortedRecords[0];
+    
+    if (latestRecord && latestRecord.age) {
+      // Extract numeric age from the age string (e.g., "25 years" -> 25)
+      const ageMatch = latestRecord.age.match(/\d+/);
+      if (ageMatch) {
+        return parseInt(ageMatch[0]);
+      }
+    }
+    
+    return null;
+  };
+
   const validateMedicalRecordForm = (formData) => {
     const newErrors = {};
     
@@ -132,18 +153,28 @@ export default function PatientList() {
     if (!formData.age || formData.age.trim() === '') {
       newErrors.age = 'Age is required';
     } else {
-      // Validate age against patient's current age
+      // Validate age against patient's current age and latest medical record age
       const selectedPatient = patients[selectedPatientIdx];
       if (selectedPatient) {
         const patientCurrentAge = calculatePatientAge(selectedPatient.birth_date);
+        const latestRecordAge = getLatestMedicalRecordAge();
         const enteredAge = parseInt(formData.age);
         
         if (isNaN(enteredAge)) {
           newErrors.age = 'Please enter a valid age number';
-        } else if (enteredAge < patientCurrentAge) {
-          newErrors.age = `Age cannot be lower than patient's current age (${patientCurrentAge} years)`;
         } else if (enteredAge < 0) {
           newErrors.age = 'Age cannot be negative';
+        } else {
+          // Check against latest medical record age first (if exists), then current age
+          const minimumAge = latestRecordAge !== null ? Math.max(latestRecordAge, patientCurrentAge) : patientCurrentAge;
+          
+          if (enteredAge < minimumAge) {
+            if (latestRecordAge !== null && latestRecordAge > patientCurrentAge) {
+              newErrors.age = `Age cannot be lower than the latest medical record's age (${latestRecordAge} years)`;
+            } else {
+              newErrors.age = `Age cannot be lower than patient's current age (${patientCurrentAge} years)`;
+            }
+          }
         }
       }
     }
@@ -710,16 +741,26 @@ export default function PatientList() {
         const selectedPatient = patients[selectedPatientIdx];
         if (selectedPatient) {
           const patientCurrentAge = calculatePatientAge(selectedPatient.birth_date);
+          const latestRecordAge = getLatestMedicalRecordAge();
           const enteredAge = parseInt(value);
           
           if (isNaN(enteredAge)) {
             newErrors.age = 'Please enter a valid age number';
-          } else if (enteredAge < patientCurrentAge) {
-            newErrors.age = `Age cannot be lower than patient's current age (${patientCurrentAge} years)`;
           } else if (enteredAge < 0) {
             newErrors.age = 'Age cannot be negative';
           } else {
-            delete newErrors[fieldName];
+            // Check against latest medical record age first (if exists), then current age
+            const minimumAge = latestRecordAge !== null ? Math.max(latestRecordAge, patientCurrentAge) : patientCurrentAge;
+            
+            if (enteredAge < minimumAge) {
+              if (latestRecordAge !== null && latestRecordAge > patientCurrentAge) {
+                newErrors.age = `Age cannot be lower than the latest medical record's age (${latestRecordAge} years)`;
+              } else {
+                newErrors.age = `Age cannot be lower than patient's current age (${patientCurrentAge} years)`;
+              }
+            } else {
+              delete newErrors[fieldName];
+            }
           }
         } else {
           delete newErrors[fieldName];
@@ -2837,8 +2878,10 @@ export default function PatientList() {
                         <button
                           type="button"
                           className="simple-btn add-record-btn"
-                          onClick={() => {
-                            setSelectedPatientIdx(patients.findIndex(p => p.id === patient.id));
+                          onClick={async () => {
+                            const idx = patients.findIndex(p => p.id === patient.id);
+                            setSelectedPatientIdx(idx);
+                            await fetchMedicalRecords(patient.id);
                             setAddMedicalRecordModal(true);
                           }}
                           style={{
@@ -4268,7 +4311,10 @@ export default function PatientList() {
                     e.target.style.transform = 'translateY(0)';
                     e.target.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.3)';
                   }}
-                  onClick={() => setAddMedicalRecordModal(true)}
+                  onClick={async () => {
+                    await fetchMedicalRecords(selectedPatient.id);
+                    setAddMedicalRecordModal(true);
+                  }}
                 >
                   <i className="bi bi-plus-circle-fill me-2"></i> 
                   Add New Record
@@ -4968,7 +5014,13 @@ export default function PatientList() {
                     <input
                       type="number"
                       className="form-control"
-                      placeholder={`Enter age (min: ${selectedPatient ? calculatePatientAge(selectedPatient.birth_date) : 'N/A'} years)`}
+                      placeholder={(() => {
+                        if (!selectedPatient) return 'Enter age';
+                        const patientCurrentAge = calculatePatientAge(selectedPatient.birth_date);
+                        const latestRecordAge = getLatestMedicalRecordAge();
+                        const minimumAge = latestRecordAge !== null ? Math.max(latestRecordAge, patientCurrentAge) : patientCurrentAge;
+                        return `Enter age (min: ${minimumAge} years)`;
+                      })()}
                       name="age"
                       value={recordForm.age || ""}
                       onChange={handleRecordFormChangeWithValidation}
@@ -4978,7 +5030,12 @@ export default function PatientList() {
                           e.preventDefault();
                         }
                       }}
-                      min={selectedPatient ? calculatePatientAge(selectedPatient.birth_date) : 0}
+                      min={(() => {
+                        if (!selectedPatient) return 0;
+                        const patientCurrentAge = calculatePatientAge(selectedPatient.birth_date);
+                        const latestRecordAge = getLatestMedicalRecordAge();
+                        return latestRecordAge !== null ? Math.max(latestRecordAge, patientCurrentAge) : patientCurrentAge;
+                      })()}
                       step="1"
                       required
                       style={{
@@ -4992,7 +5049,14 @@ export default function PatientList() {
                       }}
                     />
                     <small className="text-muted">
-                      Patient's current age: {selectedPatient ? calculatePatientAge(selectedPatient.birth_date) : 'N/A'} years
+                      {(() => {
+                        if (!selectedPatient) return 'Enter patient age';
+                        const latestRecordAge = getLatestMedicalRecordAge();
+                        if (latestRecordAge !== null) {
+                          return `Patient's age in latest medical record: ${latestRecordAge} years`;
+                        }
+                        return `Patient's current age: ${calculatePatientAge(selectedPatient.birth_date)} years`;
+                      })()}
                     </small>
                     {errors.age && (
                       <div style={{ 

@@ -49,6 +49,9 @@ const ContraceptiveList = () => {
   // Search states for modals
   const [expiringSearch, setExpiringSearch] = useState("");
   const [lowStockSearch, setLowStockSearch] = useState("");
+  // Filter states for modals
+  const [expiringFilter, setExpiringFilter] = useState("all"); // "all", "critical", "warning", "normal"
+  const [lowStockFilter, setLowStockFilter] = useState("all"); // "all", "critical", "warning", "normal"
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -910,8 +913,34 @@ const ContraceptiveList = () => {
             <button 
               className="btn-add-contraceptive" 
               onClick={() => setShowModal(true)}
+              style={{
+                background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                border: 'none',
+                color: 'white',
+                borderRadius: '12px',
+                padding: '12px 20px',
+                fontWeight: '600',
+                fontSize: '14px',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 15px rgba(40, 167, 69, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                height: 'auto'
+              }}
+              onMouseOver={e => {
+                e.target.style.background = 'linear-gradient(135deg, #20c997 0%, #17a2b8 100%)';
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(40, 167, 69, 0.4)';
+              }}
+              onMouseOut={e => {
+                e.target.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                e.target.style.transform = 'none';
+                e.target.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
+              }}
             >
-              <span className="icon">➕</span>
+              <span className="icon" style={{ fontSize: '16px' }}>➕</span>
               <span>Add Entry</span>
             </button>
           </div>
@@ -1952,7 +1981,11 @@ const ContraceptiveList = () => {
               justifyContent: 'center',
               padding: '2rem'
             }}
-            onClick={() => setShowViewAllExpiringModal(false)}
+            onClick={() => {
+              setShowViewAllExpiringModal(false);
+              setExpiringSearch("");
+              setExpiringFilter("all");
+            }}
           >
             <div 
               style={{
@@ -1983,11 +2016,15 @@ const ContraceptiveList = () => {
               >
                 <h5 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', margin: 0, fontSize: '1.2rem' }}>
                   <i className="fas fa-exclamation-triangle" style={{ fontSize: '1.2rem' }}></i>
-                  All Expiring Contraceptives ({expiringContraceptives.length})
+                  All Expiring Contraceptives
                 </h5>
                 <button 
                   type="button" 
-                  onClick={() => setShowViewAllExpiringModal(false)}
+                  onClick={() => {
+                    setShowViewAllExpiringModal(false);
+                    setExpiringSearch("");
+                    setExpiringFilter("all");
+                  }}
                   style={{ 
                     fontSize: '1.5rem', 
                     background: 'none', 
@@ -2005,50 +2042,92 @@ const ContraceptiveList = () => {
                 </button>
               </div>
               
-              {/* Search Bar */}
+              {/* Search Bar and Filters */}
               <div style={{ padding: '1rem 1.5rem', background: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
-                <InputGroup>
-                  <InputGroup.Text style={{ 
-                    background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-                    border: '1px solid #dee2e6',
-                    borderRight: 'none',
-                    borderRadius: '8px 0 0 8px',
-                    fontWeight: '600',
-                    color: '#495057'
-                  }}>
-                    <i className="bi bi-search me-2"></i>
-                    Search
-                  </InputGroup.Text>
-                  <FormControl
-                    placeholder="Search expiring contraceptives..."
-                    value={expiringSearch}
-                    onChange={(e) => setExpiringSearch(e.target.value)}
-                    style={{
-                      border: '1px solid #dee2e6',
-                      borderLeft: 'none',
-                      borderRight: 'none',
-                      borderRadius: '0',
-                      padding: '0.5rem 0.75rem',
-                      fontSize: '0.9rem',
-                      background: 'white',
-                      transition: 'all 0.3s ease'
-                    }}
-                  />
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() => setExpiringSearch("")}
-                    style={{
-                      border: '1px solid #dee2e6',
-                      borderRadius: '0 8px 8px 0',
-                      padding: '0.5rem 0.75rem',
-                      fontWeight: '600',
-                      fontSize: '0.8rem',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <i className="bi bi-arrow-clockwise"></i>
-                  </Button>
-                </InputGroup>
+                <div className="row g-2 mb-2">
+                  <div className="col-md-8">
+                    <InputGroup>
+                      <InputGroup.Text style={{ 
+                        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                        border: '1px solid #dee2e6',
+                        borderRight: 'none',
+                        borderRadius: '8px 0 0 8px',
+                        fontWeight: '600',
+                        color: '#495057'
+                      }}>
+                        <i className="bi bi-search me-2"></i>
+                        Search
+                      </InputGroup.Text>
+                      <FormControl
+                        placeholder="Search expiring contraceptives..."
+                        value={expiringSearch}
+                        onChange={(e) => setExpiringSearch(e.target.value)}
+                        style={{
+                          border: '1px solid #dee2e6',
+                          borderLeft: 'none',
+                          borderRight: 'none',
+                          borderRadius: '0',
+                          padding: '0.5rem 0.75rem',
+                          fontSize: '0.9rem',
+                          background: 'white',
+                          transition: 'all 0.3s ease'
+                        }}
+                      />
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => {
+                          setExpiringSearch("");
+                          setExpiringFilter("all");
+                        }}
+                        style={{
+                          border: '1px solid #dee2e6',
+                          borderRadius: '0 8px 8px 0',
+                          padding: '0.5rem 0.75rem',
+                          fontWeight: '600',
+                          fontSize: '0.8rem',
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        <i className="bi bi-arrow-clockwise"></i>
+                      </Button>
+                    </InputGroup>
+                  </div>
+                  <div className="col-md-4">
+                    <InputGroup>
+                      <InputGroup.Text style={{ 
+                        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                        border: '1px solid #dee2e6',
+                        borderRight: 'none',
+                        borderRadius: '8px 0 0 8px',
+                        fontWeight: '600',
+                        color: '#495057',
+                        fontSize: '0.85rem'
+                      }}>
+                        <i className="bi bi-funnel me-2"></i>
+                        Filter
+                      </InputGroup.Text>
+                      <FormControl
+                        as="select"
+                        value={expiringFilter}
+                        onChange={(e) => setExpiringFilter(e.target.value)}
+                        style={{
+                          border: '1px solid #dee2e6',
+                          borderLeft: 'none',
+                          borderRadius: '0 8px 8px 0',
+                          padding: '0.5rem 0.75rem',
+                          fontSize: '0.9rem',
+                          background: 'white',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="all">All Items</option>
+                        <option value="critical">Critical (≤7 days)</option>
+                        <option value="warning">Warning (≤30 days)</option>
+                        <option value="normal">Normal (31-180 days)</option>
+                      </FormControl>
+                    </InputGroup>
+                  </div>
+                </div>
               </div>
 
               <div 
@@ -2060,11 +2139,26 @@ const ContraceptiveList = () => {
                 }}
               >
                 {(() => {
-                  const filteredExpiring = expiringContraceptives.filter(contraceptive =>
+                  let filteredExpiring = expiringContraceptives.filter(contraceptive =>
                     contraceptive.contraceptive_name.toLowerCase().includes(expiringSearch.toLowerCase()) ||
                     contraceptive.contraceptive_type.toLowerCase().includes(expiringSearch.toLowerCase()) ||
                     contraceptive.batch_number.toLowerCase().includes(expiringSearch.toLowerCase())
                   );
+
+                  // Apply expiration filter
+                  if (expiringFilter !== "all") {
+                    filteredExpiring = filteredExpiring.filter(contraceptive => {
+                      const daysUntilExpiry = getDaysUntilExpiration(contraceptive.expiration_date);
+                      if (expiringFilter === "critical") {
+                        return daysUntilExpiry !== null && daysUntilExpiry <= 7;
+                      } else if (expiringFilter === "warning") {
+                        return daysUntilExpiry !== null && daysUntilExpiry > 7 && daysUntilExpiry <= 30;
+                      } else if (expiringFilter === "normal") {
+                        return daysUntilExpiry !== null && daysUntilExpiry > 30 && daysUntilExpiry <= 180;
+                      }
+                      return true;
+                    });
+                  }
 
                   return filteredExpiring.length > 0 ? (
                     <div className="table-responsive">
@@ -2139,7 +2233,11 @@ const ContraceptiveList = () => {
                 }}
               >
                 <button 
-                  onClick={() => setShowViewAllExpiringModal(false)}
+                  onClick={() => {
+                    setShowViewAllExpiringModal(false);
+                    setExpiringSearch("");
+                    setExpiringFilter("all");
+                  }}
                   style={{
                     background: 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)',
                     border: 'none',
@@ -2181,7 +2279,11 @@ const ContraceptiveList = () => {
               justifyContent: 'center',
               padding: '2rem'
             }}
-            onClick={() => setShowViewAllLowStockModal(false)}
+            onClick={() => {
+              setShowViewAllLowStockModal(false);
+              setLowStockSearch("");
+              setLowStockFilter("all");
+            }}
           >
             <div 
               style={{
@@ -2212,11 +2314,15 @@ const ContraceptiveList = () => {
               >
                 <h5 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '600', margin: 0, fontSize: '1.2rem' }}>
                   <i className="fas fa-boxes" style={{ fontSize: '1.2rem' }}></i>
-                  All Low Stock Contraceptives ({lowStockContraceptives.length})
+                  All Low Stock Contraceptives
                 </h5>
                 <button 
                   type="button" 
-                  onClick={() => setShowViewAllLowStockModal(false)}
+                  onClick={() => {
+                    setShowViewAllLowStockModal(false);
+                    setLowStockSearch("");
+                    setLowStockFilter("all");
+                  }}
                   style={{ 
                     fontSize: '1.5rem', 
                     background: 'none', 
@@ -2234,50 +2340,92 @@ const ContraceptiveList = () => {
                 </button>
               </div>
               
-              {/* Search Bar */}
+              {/* Search Bar and Filters */}
               <div style={{ padding: '1rem 1.5rem', background: '#f8f9fa', borderBottom: '1px solid #dee2e6' }}>
-                <InputGroup>
-                  <InputGroup.Text style={{ 
-                    background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-                    border: '1px solid #dee2e6',
-                    borderRight: 'none',
-                    borderRadius: '8px 0 0 8px',
-                    fontWeight: '600',
-                    color: '#495057'
-                  }}>
-                    <i className="bi bi-search me-2"></i>
-                    Search
-                  </InputGroup.Text>
-                  <FormControl
-                    placeholder="Search low stock contraceptives..."
-                    value={lowStockSearch}
-                    onChange={(e) => setLowStockSearch(e.target.value)}
-                    style={{
-                      border: '1px solid #dee2e6',
-                      borderLeft: 'none',
-                      borderRight: 'none',
-                      borderRadius: '0',
-                      padding: '0.5rem 0.75rem',
-                      fontSize: '0.9rem',
-                      background: 'white',
-                      transition: 'all 0.3s ease'
-                    }}
-                  />
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() => setLowStockSearch("")}
-                    style={{
-                      border: '1px solid #dee2e6',
-                      borderRadius: '0 8px 8px 0',
-                      padding: '0.5rem 0.75rem',
-                      fontWeight: '600',
-                      fontSize: '0.8rem',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <i className="bi bi-arrow-clockwise"></i>
-                  </Button>
-                </InputGroup>
+                <div className="row g-2 mb-2">
+                  <div className="col-md-8">
+                    <InputGroup>
+                      <InputGroup.Text style={{ 
+                        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                        border: '1px solid #dee2e6',
+                        borderRight: 'none',
+                        borderRadius: '8px 0 0 8px',
+                        fontWeight: '600',
+                        color: '#495057'
+                      }}>
+                        <i className="bi bi-search me-2"></i>
+                        Search
+                      </InputGroup.Text>
+                      <FormControl
+                        placeholder="Search low stock contraceptives..."
+                        value={lowStockSearch}
+                        onChange={(e) => setLowStockSearch(e.target.value)}
+                        style={{
+                          border: '1px solid #dee2e6',
+                          borderLeft: 'none',
+                          borderRight: 'none',
+                          borderRadius: '0',
+                          padding: '0.5rem 0.75rem',
+                          fontSize: '0.9rem',
+                          background: 'white',
+                          transition: 'all 0.3s ease'
+                        }}
+                      />
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => {
+                          setLowStockSearch("");
+                          setLowStockFilter("all");
+                        }}
+                        style={{
+                          border: '1px solid #dee2e6',
+                          borderRadius: '0 8px 8px 0',
+                          padding: '0.5rem 0.75rem',
+                          fontWeight: '600',
+                          fontSize: '0.8rem',
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        <i className="bi bi-arrow-clockwise"></i>
+                      </Button>
+                    </InputGroup>
+                  </div>
+                  <div className="col-md-4">
+                    <InputGroup>
+                      <InputGroup.Text style={{ 
+                        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+                        border: '1px solid #dee2e6',
+                        borderRight: 'none',
+                        borderRadius: '8px 0 0 8px',
+                        fontWeight: '600',
+                        color: '#495057',
+                        fontSize: '0.85rem'
+                      }}>
+                        <i className="bi bi-funnel me-2"></i>
+                        Filter
+                      </InputGroup.Text>
+                      <FormControl
+                        as="select"
+                        value={lowStockFilter}
+                        onChange={(e) => setLowStockFilter(e.target.value)}
+                        style={{
+                          border: '1px solid #dee2e6',
+                          borderLeft: 'none',
+                          borderRadius: '0 8px 8px 0',
+                          padding: '0.5rem 0.75rem',
+                          fontSize: '0.9rem',
+                          background: 'white',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="all">All Items</option>
+                        <option value="critical">Critical (≤20 units)</option>
+                        <option value="warning">Warning (≤50 units)</option>
+                        <option value="normal">Normal (51-99 units)</option>
+                      </FormControl>
+                    </InputGroup>
+                  </div>
+                </div>
               </div>
 
               <div 
@@ -2289,11 +2437,26 @@ const ContraceptiveList = () => {
                 }}
               >
                 {(() => {
-                  const filteredLowStock = lowStockContraceptives.filter(contraceptive =>
+                  let filteredLowStock = lowStockContraceptives.filter(contraceptive =>
                     contraceptive.contraceptive_name.toLowerCase().includes(lowStockSearch.toLowerCase()) ||
                     contraceptive.contraceptive_type.toLowerCase().includes(lowStockSearch.toLowerCase()) ||
                     contraceptive.batch_number.toLowerCase().includes(lowStockSearch.toLowerCase())
                   );
+
+                  // Apply stock level filter
+                  if (lowStockFilter !== "all") {
+                    filteredLowStock = filteredLowStock.filter(contraceptive => {
+                      const stock = parseInt(contraceptive.quantity) || 0;
+                      if (lowStockFilter === "critical") {
+                        return stock > 0 && stock <= 20;
+                      } else if (lowStockFilter === "warning") {
+                        return stock > 20 && stock <= 50;
+                      } else if (lowStockFilter === "normal") {
+                        return stock > 50 && stock < 100;
+                      }
+                      return true;
+                    });
+                  }
 
                   return filteredLowStock.length > 0 ? (
                     <div className="table-responsive">
@@ -2370,7 +2533,11 @@ const ContraceptiveList = () => {
                 }}
               >
                 <button 
-                  onClick={() => setShowViewAllLowStockModal(false)}
+                  onClick={() => {
+                    setShowViewAllLowStockModal(false);
+                    setLowStockSearch("");
+                    setLowStockFilter("all");
+                  }}
                   style={{
                     background: 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)',
                     border: 'none',

@@ -86,17 +86,17 @@ const tableConfigs = [
     customHeader: ( 
       <>
         <tr>
-          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '100px', lineHeight: '1.3', fontWeight: '600' }}>Reg. No.</th>
-          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '100px', lineHeight: '1.3', fontWeight: '600' }}>Reg. Date</th>
-          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '100px', lineHeight: '1.3', fontWeight: '600' }}>Birth Date</th>
-          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '120px', lineHeight: '1.3', fontWeight: '600' }}>Family Serial #</th>
-          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '150px', lineHeight: '1.3', fontWeight: '600' }}>Child Name</th>
-          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '60px', lineHeight: '1.3', fontWeight: '600' }}>Sex</th>
-          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '150px', lineHeight: '1.3', fontWeight: '600' }}>Mother Name</th>
-          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '200px', lineHeight: '1.3', fontWeight: '600' }}>Address</th>
-          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '80px', lineHeight: '1.3', fontWeight: '600' }}>TT2+ (8A)</th>
-          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '80px', lineHeight: '1.3', fontWeight: '600' }}>TT3+ (8B)</th>
-          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '100px', lineHeight: '1.3', fontWeight: '600' }}>Actions</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '100px', lineHeight: '1.3', fontWeight: '600', textAlign: 'center' }}>Reg. No.</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '100px', lineHeight: '1.3', fontWeight: '600', textAlign: 'center' }}>Reg. Date</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '100px', lineHeight: '1.3', fontWeight: '600', textAlign: 'center' }}>Birth Date</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '120px', lineHeight: '1.3', fontWeight: '600', textAlign: 'center' }}>Family Serial #</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '150px', lineHeight: '1.3', fontWeight: '600', textAlign: 'center' }}>Child Name</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '60px', lineHeight: '1.3', fontWeight: '600', textAlign: 'center', verticalAlign: 'middle' }}>Sex</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '150px', lineHeight: '1.3', fontWeight: '600', textAlign: 'center' }}>Mother Name</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '200px', lineHeight: '1.3', fontWeight: '600', textAlign: 'center', verticalAlign: 'middle' }}>Address</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '80px', lineHeight: '1.3', fontWeight: '600', textAlign: 'center' }}>TT2+ (8A)</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '80px', lineHeight: '1.3', fontWeight: '600', textAlign: 'center' }}>TT3+ (8B)</th>
+          <th style={{ fontSize: '10px', padding: '6px 4px', maxWidth: '100px', lineHeight: '1.3', fontWeight: '600', textAlign: 'center' }}>Actions</th>
         </tr>
       </>
     ),
@@ -1726,10 +1726,128 @@ export default function PatientVaccineTracker() {
   };
 
   return (
-    <Container fluid>
+    <div className="patient-list-container">
       <style>
         {searchAnimationStyle}
         {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes slideInRight {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+          
+          /* Compact Patient List Styling */
+          .patient-list-container {
+            padding: 1rem;
+            background: #ffffff;
+            max-width: 100%;
+            overflow-x: hidden;
+            overflow-y: visible;
+            box-sizing: border-box;
+            border-radius: 0;
+            width: 100%;
+            margin: 0;
+            position: relative;
+            min-height: calc(100vh - 80px);
+          }
+          
+          .header-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            margin-bottom: 1rem;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+          }
+          
+          .page-label {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0;
+            letter-spacing: -0.025em;
+          }
+          
+          .user-info-display {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin: 0.5rem 0 0 0;
+          }
+          
+          .search-and-add-container {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            margin-bottom: 1rem;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+          }
+          
+          .search-input {
+            background: #f8fafc !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 6px !important;
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.875rem !important;
+            transition: all 0.2s ease !important;
+          }
+          
+          .search-input:focus {
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+          }
+          
+          .table {
+            background: white !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+            border: 1px solid rgba(226, 232, 240, 0.8) !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+          
+          .table thead tr {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+          }
+          
+          .table th {
+            padding: 0.75rem 0.5rem !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            color: white !important;
+            border: none !important;
+            text-align: center !important;
+          }
+          
+          .table td {
+            padding: 0.5rem !important;
+            font-size: 0.75rem !important;
+            border: none !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+          }
+          
+          .table tbody tr:hover {
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+          }
+          
           .table-modern thead th {
             position: static !important;
             top: auto !important;
@@ -1738,260 +1856,317 @@ export default function PatientVaccineTracker() {
             position: static !important;
             top: auto !important;
           }
+          
+          .table-wrapper {
+            overflow-x: auto;
+            max-width: 100%;
+            width: 100%;
+          }
+          
+          .table td.text-center {
+            text-align: center !important;
+          }
+          
+          .table th.text-center {
+            text-align: center !important;
+          }
+          
+          .patient-table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            overflow: hidden;
+            max-width: 100%;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 1rem;
+          }
         `}
       </style>
-      <Card className="border-0 shadow-lg rounded-4 overflow-hidden" style={{ 
-        background: '#ffffff',
-        border: '1px solid #e2e8f0'
-      }}>
-        <Card.Header style={{
-          background: '#ffffff',
-          borderBottom: '2px solid #f1f5f9',
-          position: 'relative',
-          padding: '40px',
-        }}>
-          <Row className="align-items-center">
-            <Col md={8}>
-              <div className="d-flex align-items-center">
-                <div style={{
-                  width: '60px',
-                  height: '60px',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: '1.25rem',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)'
-                }}>
-                  <i className="bi bi-clipboard-data text-white" style={{ fontSize: '1.5rem' }}></i>
-                </div>
-                <div>
-                  <h2 className="fw-bold mb-1" style={{ 
-                    fontSize: '1.75rem',
-                    color: '#1e293b',
-                    letterSpacing: '-0.025em'
-                  }}>
-                    Patient Vaccine Tracker
-                  </h2>
-                  <p className="mb-0" style={{ 
-                    fontSize: '1rem',
-                    color: '#64748b',
-                    fontWeight: '500'
-                  }}>
-                    Comprehensive immunization and nutrition tracking
-                  </p>
-                </div>
-              </div>
-            </Col>
-            <Col md={4} className="text-end">
-              {user && (
-                <div style={{ 
-                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', 
-                  color: '#475569',
-                  borderRadius: '12px',
-                  padding: '0.875rem 1.25rem',
-                  display: 'inline-block',
-                  fontSize: '0.9rem',
-                  fontWeight: '600',
-                  border: '1px solid #e2e8f0',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
-                }}>
-                  <i className="bi bi-person-circle me-2" style={{ color: '#3b82f6' }}></i>
-                  {user.name} ({user.role})
-                </div>
-              )}
-            </Col>
-          </Row>
-          
-          {/* Search Section */}
-          <Row className="mt-4">
-            <Col md={8}>
+      
+      <div className="header-section">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 className="page-label">
+              <i className="bi bi-clipboard-data me-3 text-primary"></i>
+              Patient Vaccine Tracker
+            </h1>
+            <p className="text-muted mb-0" style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
+              Comprehensive immunization and nutrition tracking
+            </p>
+          </div>
+          <div className="d-flex align-items-center gap-3">
+            <div className="text-end">
+              <div className="text-muted small">Last updated</div>
+              <div className="fw-semibold" style={{ fontSize: '0.875rem' }}>{new Date().toLocaleDateString()}</div>
+            </div>
+          </div>
+        </div>
+        {user && (
+          <div className="mt-3 pt-3" style={{ borderTop: '1px solid #e2e8f0' }}>
+            <p className="user-info-display d-flex align-items-center gap-2 mb-0">
               <div style={{
-                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-                borderRadius: '12px',
-                padding: '1rem',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                width: '24px',
+                height: '24px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '0.75rem'
               }}>
-                <div className="d-flex gap-2 align-items-center">
-                  <div className="flex-grow-1">
-                    <Form.Control
-                      type="text"
-                      placeholder="Search by child's name or mother's name..."
-                      value={searchTerm}
-                      onChange={handleSearchInputChange}
-                      onKeyPress={handleSearchKeyPress}
-                      className="border-0"
-                      style={{ 
-                        borderRadius: '8px',
-                        background: '#ffffff',
-                        fontSize: '0.85rem',
-                        padding: '0.625rem 1rem',
-                        border: '1px solid #e2e8f0',
-                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                        transition: 'all 0.2s ease'
-                      }}
-                    />
-                  </div>
-                  <div className="d-flex gap-2">
-                    <Button 
-                      variant="light" 
-                      size="sm"
-                      onClick={handleSearch}
-                      disabled={isSearching}
-                      style={{
-                        background: isSearching ? '#6c757d' : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                        color: isSearching ? '#ffffff' : '#ffffff',
-                        borderRadius: '8px',
-                        padding: '0.625rem 1.25rem',
-                        fontSize: '0.8rem',
-                        fontWeight: '600',
-                        border: 'none',
-                        boxShadow: '0 2px 4px rgba(59, 130, 246, 0.25)',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      {isSearching ? (
-                        <>
-                          <i className="bi bi-arrow-clockwise me-1" style={{ fontSize: '0.75rem' }}></i>
-                          Searching...
-                        </>
-                      ) : (
-                        <>
-                          <i className="bi bi-search me-1" style={{ fontSize: '0.75rem' }}></i>
-                          Search
-                        </>
-                      )}
-                    </Button>
-                    {filteredData.length > 0 && (
-                      <Button 
-                        variant="outline-secondary" 
-                        size="sm"
-                        onClick={handleClearSearch}
-                        style={{
-                          background: '#ffffff',
-                          border: '1px solid #d1d5db',
-                          color: '#6b7280',
-                          borderRadius: '8px',
-                          padding: '0.625rem 1.25rem',
-                          fontSize: '0.8rem',
-                          fontWeight: '600',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        <i className="bi bi-x-circle me-1" style={{ fontSize: '0.75rem' }}></i>
-                        Clear
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                {filteredData.length > 0 && (
-                  <div className="mt-3">
-                    <small style={{ 
-                      color: '#059669',
-                      fontWeight: '600',
-                      fontSize: '0.85rem'
-                    }}>
-                      <i className="bi bi-check-circle me-1"></i>
-                      Found {filteredData.length} result{filteredData.length !== 1 ? 's' : ''} for "<span className="fw-bold">{searchTerm}</span>"
-                    </small>
-                  </div>
-                )}
+                <i className="bi bi-person-circle"></i>
               </div>
-            </Col>
-            <Col md={4} className="d-flex justify-content-end align-items-center">
+              <span>
+                Logged in as: <strong className="text-primary">{user.name}</strong> 
+                <span className="ms-1 badge bg-light text-dark" style={{ fontSize: '0.65rem' }}>
+                  {user.role}
+                </span>
+              </span>
+            </p>
+          </div>
+        )}
+      </div>
+      
+      <div className="search-and-add-container">
+        <div className="search-filters-section">
+          <div className="row g-3 align-items-end">
+            <div className="col-md-9">
+              <label className="form-label fw-semibold" style={{ fontSize: '0.875rem', color: '#374151' }}>
+                <i className="bi bi-search me-1"></i>
+                Search
+              </label>
               <div className="d-flex gap-2">
-                {/* Archive Button */}
-                <Button 
-                  variant="warning" 
-                  size="sm"
-                  onClick={handleShowArchivedModal}
+                <input
+                  type="text"
+                  className="form-control search-input"
+                  placeholder="Search by child's name or mother's name..."
+                  value={searchTerm}
+                  onChange={handleSearchInputChange}
+                  onKeyPress={handleSearchKeyPress}
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '0.875rem',
+                    height: '42px',
+                    transition: 'all 0.2s ease',
+                    flex: 1
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#667eea';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#d1d5db';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+                <button
+                  className="btn btn-primary"
+                  type="button"
+                  onClick={handleSearch}
+                  disabled={isSearching}
+                  style={{
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0.625rem 1.25rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    height: '42px',
+                    boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    whiteSpace: 'nowrap'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSearching) {
+                      e.target.style.transform = 'translateY(-1px)';
+                      e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSearching) {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
+                    }
+                  }}
+                >
+                  {isSearching ? (
+                    <>
+                      <i className="bi bi-arrow-clockwise" style={{ animation: 'spin 1s linear infinite' }}></i>
+                      Searching...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-search"></i>
+                      Search
+                    </>
+                  )}
+                </button>
+                {filteredData.length > 0 && (
+                  <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={handleClearSearch}
                     style={{
-                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                      border: 'none',
-                      color: 'white',
                       borderRadius: '8px',
-                      padding: '0.5rem 1rem',
+                      padding: '0.625rem 1.25rem',
+                      fontSize: '0.875rem',
                       fontWeight: '600',
-                      fontSize: '0.8rem',
+                      height: '42px',
+                      border: '1.5px solid #d1d5db',
+                      background: 'white',
+                      color: '#6b7280',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                      transition: 'all 0.2s ease',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.375rem',
-                      boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
-                      transition: 'all 0.2s ease'
+                      gap: '0.5rem',
+                      whiteSpace: 'nowrap'
                     }}
-                    onMouseOver={e => {
-                      e.target.style.background = 'linear-gradient(135deg, #d97706 0%, #b45309 100%)';
+                    onMouseEnter={(e) => {
+                      e.target.style.background = '#f3f4f6';
+                      e.target.style.borderColor = '#9ca3af';
+                      e.target.style.color = '#374151';
                       e.target.style.transform = 'translateY(-1px)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.35)';
+                      e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
                     }}
-                    onMouseOut={e => {
-                      e.target.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
-                      e.target.style.transform = 'none';
-                      e.target.style.boxShadow = '0 2px 8px rgba(245, 158, 11, 0.25)';
+                    onMouseLeave={(e) => {
+                      e.target.style.background = 'white';
+                      e.target.style.borderColor = '#d1d5db';
+                      e.target.style.color = '#6b7280';
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
                     }}
                   >
-                    <i className="bi bi-archive" style={{ fontSize: '0.75rem' }}></i>
-                    View Archived
-                  </Button>
-              <Button 
-                variant="success" 
-                  size="sm"
-                onClick={handleAddRegistration}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  border: 'none',
-                  color: 'white',
-                    borderRadius: '8px',
-                    padding: '0.5rem 1.25rem',
-                  fontWeight: '600',
-                    fontSize: '0.8rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                    gap: '0.375rem',
-                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                  <i className="bi bi-plus-circle" style={{ fontSize: '0.75rem' }}></i> 
-                Add Patient
-              </Button>
+                    <i className="bi bi-x-circle"></i>
+                    Clear
+                  </button>
+                )}
               </div>
-            </Col>
-          </Row>
-        </Card.Header>
-        <Card.Body className="p-0" style={{ background: '#ffffff' }}>
-          <div style={{ 
-            overflowY: 'visible', 
-            position: 'relative',
-            borderRadius: '0 0 16px 16px'
+              {filteredData.length > 0 && (
+                <div className="mt-2">
+                  <small style={{ 
+                    color: '#059669',
+                    fontWeight: '600',
+                    fontSize: '0.85rem'
+                  }}>
+                    <i className="bi bi-check-circle me-1"></i>
+                    Found {filteredData.length} result{filteredData.length !== 1 ? 's' : ''} for "<span className="fw-bold">{searchTerm}</span>"
+                  </small>
+                </div>
+              )}
+            </div>
+            <div className="col-md-3">
+              <label className="form-label fw-semibold" style={{ fontSize: '0.875rem', color: 'transparent' }}>
+                Actions
+              </label>
+              <div className="d-flex gap-2" style={{ width: '100%', flexWrap: 'nowrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-outline-warning"
+                  onClick={handleShowArchivedModal}
+                  style={{
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0.5rem 0.75rem',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    height: '42px',
+                    boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.375rem',
+                    whiteSpace: 'nowrap',
+                    flex: '1',
+                    minWidth: '0',
+                    overflow: 'hidden'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-1px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 2px 8px rgba(245, 158, 11, 0.3)';
+                  }}
+                >
+                  <i className="bi bi-archive" style={{ fontSize: '0.875rem', flexShrink: 0 }}></i>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>Archive</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={handleAddRegistration}
+                  style={{
+                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0.5rem 0.75rem',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    height: '42px',
+                    color: 'white',
+                    boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.375rem',
+                    whiteSpace: 'nowrap',
+                    flex: '1',
+                    minWidth: '0',
+                    overflow: 'hidden'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-1px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(34, 197, 94, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 2px 8px rgba(34, 197, 94, 0.3)';
+                  }}
+                >
+                  <i className="bi bi-plus-circle-fill" style={{ fontSize: '0.875rem', flexShrink: 0 }}></i>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>Add</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="d-flex justify-content-between align-items-center mt-3 pt-3" style={{ borderTop: '1px solid #e2e8f0' }}>
+          <div className="results-summary">
+            <span className="text-muted fw-semibold" style={{ fontSize: '0.875rem' }}>
+              <i className="bi bi-people-fill me-2"></i>
+              {filteredData.length > 0 ? filteredData.length : data.length} {activePage === 0 ? 'patients' : activePage === 1 ? 'newborn records' : activePage === 2 ? 'nutrition records' : 'outcome records'} found
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="patient-table-container">
+        <div className="table-wrapper">
+          <table className="table" style={{
+            width: '100%',
+            margin: '0',
+            fontSize: '0.8rem',
+            minWidth: '1200px'
           }}>
-            <div className="table-responsive" style={{ 
-              overflowX: 'auto',
-              overflowY: 'visible',
-              width: '100%'
-            }}>
-              <Table bordered hover className="table-modern mb-0" style={{ 
-                fontSize: '0.9rem', 
-                width: '100%', 
-                marginBottom: '0',
-                minWidth: '1200px'
-              }}>
-              <thead style={{ 
-                background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)'
-              }}>
+              <thead>
               {customHeader ? customHeader : (
                 <tr>
                   {columns.map((col, idx) => (
-                      <th key={idx} className="text-white border-0" style={{ 
-                        fontSize: '0.85rem', 
-                        padding: '1rem 0.75rem',
-                        whiteSpace: 'nowrap',
-                        fontWeight: '600',
-                        textAlign: 'center',
-                        letterSpacing: '0.025em'
-                      }}>
+                      <th key={idx} style={{ textAlign: 'center' }}>
                         {col === "actions" ? "Actions" : 
                          col === "registration_no" ? "Reg. No." :
                          col === "registration_date" ? "Reg. Date" :
@@ -2133,17 +2308,17 @@ export default function PatientVaccineTracker() {
                                   background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
                                   border: 'none',
                                   color: 'white',
-                                  width: '90px',
-                                  height: '38px',
-                                  fontSize: '0.8rem',
+                                  width: '70px',
+                                  height: '32px',
+                                  fontSize: '0.55rem',
                                   padding: '0.5rem 0.75rem',
-                                  borderRadius: '8px',
+                                  borderRadius: '6px',
                                   fontWeight: '600',
                                   transition: 'all 0.2s ease',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  gap: '0.4rem',
+                                  gap: '0.3rem',
                                   boxShadow: '0 2px 8px rgba(59, 130, 246, 0.25)',
                                   textTransform: 'none',
                                   letterSpacing: '0.025em'
@@ -2157,7 +2332,7 @@ export default function PatientVaccineTracker() {
                                   e.target.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.25)';
                                 }}
                               >
-                                <i className="bi bi-eye" style={{ fontSize: '0.9rem' }}></i>
+                                <i className="bi bi-eye" style={{ fontSize: '0.75rem' }}></i>
                                 <span>View</span>
                               </Button>
                               <Button 
@@ -2169,20 +2344,21 @@ export default function PatientVaccineTracker() {
                                   background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                                   border: 'none',
                                   color: 'white',
-                                  width: '100px',
-                                  height: '38px',
-                                  fontSize: '0.8rem',
-                                  padding: '0.5rem 0.75rem',
-                                  borderRadius: '8px',
+                                  width: '95px',
+                                  height: '32px',
+                                  fontSize: '0.5rem',
+                                  padding: '0.35rem 0.5rem',
+                                  borderRadius: '6px',
                                   fontWeight: '600',
                                   transition: 'all 0.2s ease',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  gap: '0.4rem',
+                                  gap: '0.25rem',
                                   boxShadow: '0 2px 8px rgba(16, 185, 129, 0.25)',
                                   textTransform: 'none',
-                                  letterSpacing: '0.025em'
+                                  letterSpacing: '0.025em',
+                                  whiteSpace: 'nowrap'
                                 }}
                                 onMouseOver={e => {
                                   e.target.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
@@ -2195,8 +2371,8 @@ export default function PatientVaccineTracker() {
                                   e.target.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.25)';
                                 }}
                               >
-                                <i className="bi bi-file-medical" style={{ fontSize: '0.9rem' }}></i>
-                                <span>Summary</span>
+                                <i className="bi bi-file-medical" style={{ fontSize: '0.6rem' }}></i>
+                                <span style={{ fontSize: '0.5rem' }}>Summary</span>
                               </Button>
                               {/* Archive Button */}
                               <Button 
@@ -2209,17 +2385,17 @@ export default function PatientVaccineTracker() {
                                     background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                                     border: 'none',
                                     color: 'white',
-                                    width: '90px',
-                                    height: '38px',
-                                    fontSize: '0.8rem',
+                                    width: '75px',
+                                    height: '32px',
+                                    fontSize: '0.55rem',
                                     padding: '0.5rem 0.75rem',
-                                    borderRadius: '8px',
+                                    borderRadius: '6px',
                                     fontWeight: '600',
                                     transition: 'all 0.2s ease',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    gap: '0.4rem',
+                                    gap: '0.3rem',
                                     boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)',
                                     textTransform: 'none',
                                     letterSpacing: '0.025em',
@@ -2240,37 +2416,38 @@ export default function PatientVaccineTracker() {
                                     }
                                   }}
                                 >
-                                  <i className="bi bi-archive" style={{ fontSize: '0.9rem' }}></i>
+                                  <i className="bi bi-archive" style={{ fontSize: '0.75rem' }}></i>
                                   <span>{isArchiving ? 'Archiving...' : 'Archive'}</span>
                                 </Button>
                             </div>
                         </td>
                       ) : (
-                        <td key={cIdx} style={{ 
-                          padding: '1rem',
-                          fontSize: '0.875rem',
-                          maxWidth: '160px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          lineHeight: '1.4',
-                          color: '#1e293b',
-                          fontWeight: '500',
-                          textAlign: 'center',
-                          border: 'none',
-                          borderBottom: '1px solid #f1f5f9'
-                        }} title={row[col] || ""}>
-                          {row.isEmptyPlaceholder && !row[col] ? (
-                            <span style={{ 
-                              color: '#6c757d', 
-                              fontStyle: 'italic',
-                              fontSize: '10px'
-                            }}>
-                              Empty
-                            </span>
-                          ) : (
-                            row[col] || ""
-                          )}
+                        <td 
+                          key={cIdx} 
+                          className={(col === "registration_no" || col === "registration_date" || col === "sex" || col === "address" || col === "cpab_8a" || col === "cpab_8b") ? "text-center" : ""}
+                          style={{ 
+                            textAlign: (col === "registration_no" || col === "registration_date" || col === "sex" || col === "address" || col === "cpab_8a" || col === "cpab_8b") ? 'center' : undefined
+                          }} 
+                          title={row[col] || ""}
+                        >
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: (col === "registration_no" || col === "registration_date" || col === "sex" || col === "address" || col === "cpab_8a" || col === "cpab_8b") ? 'center' : 'flex-start',
+                            alignItems: 'center',
+                            width: '100%'
+                          }}>
+                            {row.isEmptyPlaceholder && !row[col] ? (
+                              <span style={{ 
+                                color: '#6c757d', 
+                                fontStyle: 'italic',
+                                fontSize: '10px'
+                              }}>
+                                Empty
+                              </span>
+                            ) : (
+                              row[col] || ""
+                            )}
+                          </div>
                         </td>
                       )
                     )}
@@ -2278,94 +2455,64 @@ export default function PatientVaccineTracker() {
                 ))
               )}
             </tbody>
-          </Table>
+          </table>
+        </div>
+      </div>
+
+      {/* Pagination Controls */}
+      {totalEntries > 0 && (
+        <div className="pagination-section" style={{
+          background: 'white',
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 4px rgba(0, 0, 0, 0.05)',
+          padding: '0.75rem 1rem',
+          marginTop: '1rem'
+        }}>
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            {/* Compact pagination info */}
+            <div className="d-flex align-items-center gap-3">
+              <span className="text-muted fw-semibold" style={{ fontSize: '0.8rem' }}>
+                <i className="bi bi-info-circle me-1"></i>
+                {startIndex + 1}-{Math.min(endIndex, totalEntries)} of {totalEntries}
+              </span>
+              <select
+                className="form-select form-select-sm"
+                value={rowsPerPage}
+                onChange={(e) => handleRowsPerPageChange(parseInt(e.target.value))}
+                style={{
+                  width: '70px',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                  padding: '0.25rem 0.5rem',
+                  fontSize: '0.75rem',
+                  background: '#f8fafc'
+                }}
+              >
+                <option value="10">10</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
             </div>
-          </div>
 
-          {/* Pagination Controls */}
-          {totalEntries > 0 && (
-            <div className="pagination-section mt-4 p-4" style={{
-              background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-              borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              margin: '1rem'
-            }}>
-              <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                {/* Rows per page selector */}
-                <div className="d-flex align-items-center gap-3">
-                  <span className="text-muted fw-semibold" style={{ fontSize: '0.95rem', color: '#64748b' }}>
-                    <i className="bi bi-list-ul me-2"></i>
-                    Rows per page:
-                  </span>
-                  <select
-                    className="form-select form-select-sm"
-                    value={rowsPerPage}
-                    onChange={(e) => handleRowsPerPageChange(parseInt(e.target.value))}
-                    style={{
-                      width: 'auto',
-                      minWidth: '90px',
-                      border: '2px solid #e2e8f0',
-                      borderRadius: '8px',
-                      padding: '0.5rem 0.75rem',
-                      fontSize: '0.9rem',
-                      fontWeight: '500',
-                      background: '#fff',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <option value="10">10</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                  </select>
-                </div>
-
-                {/* Entry counter */}
-                <div className="d-flex align-items-center">
-                  <span className="text-muted fw-semibold" style={{ fontSize: '0.95rem', color: '#64748b' }}>
-                    <i className="bi bi-info-circle me-2"></i>
-                    Showing {startIndex + 1} to {Math.min(endIndex, totalEntries)} of {totalEntries} entries
-                  </span>
-                </div>
-
-                {/* Page navigation */}
-                <div className="d-flex align-items-center gap-2" style={{ flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <button
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    style={{
-                      borderRadius: '8px',
-                      padding: '0.75rem 1.5rem',
-                      fontSize: '0.9rem',
-                      fontWeight: '600',
-                      border: '2px solid #3b82f6',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      color: '#3b82f6',
-                      background: 'rgba(59, 130, 246, 0.05)',
-                      boxShadow: '0 2px 8px rgba(59, 130, 246, 0.1)'
-                    }}
-                    onMouseOver={e => {
-                      if (currentPage !== 1) {
-                        e.target.style.background = '#3b82f6';
-                        e.target.style.color = 'white';
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.3)';
-                      }
-                    }}
-                    onMouseOut={e => {
-                      if (currentPage !== 1) {
-                        e.target.style.background = 'rgba(59, 130, 246, 0.05)';
-                        e.target.style.color = '#3b82f6';
-                        e.target.style.transform = 'none';
-                        e.target.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.1)';
-                      }
-                    }}
-                  >
-                    <i className="bi bi-chevron-left me-2"></i>
-                    Previous
-                  </button>
+            {/* Compact Page navigation */}
+            <div className="d-flex align-items-center gap-1">
+              <button
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{
+                  borderRadius: '6px',
+                  padding: '0.375rem 0.5rem',
+                  fontSize: '0.75rem',
+                  fontWeight: '500',
+                  border: '1px solid #667eea',
+                  color: '#667eea',
+                  background: 'transparent'
+                }}
+              >
+                <i className="bi bi-chevron-left"></i>
+              </button>
                   
                   {/* Smart pagination with ellipsis */}
                   <div className="d-flex align-items-center gap-1" style={{ flexWrap: 'nowrap', overflow: 'hidden' }}>
@@ -2381,7 +2528,7 @@ export default function PatientVaccineTracker() {
                           className={`btn btn-sm ${1 === currentPage ? 'btn-primary' : 'btn-outline-primary'}`}
                           onClick={() => handlePageChange(1)}
                           style={{
-                            borderRadius: '4px',
+                            borderRadius: '6px',
                             padding: '6px 12px',
                             fontSize: '13px',
                             fontWeight: '500',
@@ -2413,7 +2560,7 @@ export default function PatientVaccineTracker() {
                           className={`btn btn-sm ${isCurrentPage ? 'btn-primary' : 'btn-outline-primary'}`}
                               onClick={() => handlePageChange(i)}
                           style={{
-                            borderRadius: '4px',
+                            borderRadius: '6px',
                             padding: '6px 12px',
                             fontSize: '13px',
                             fontWeight: '500',
@@ -2534,23 +2681,23 @@ export default function PatientVaccineTracker() {
                     })()}
                   </div>
                   
-                  <button
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    style={{
-                      borderRadius: '4px',
-                      padding: '8px 16px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      border: '1.5px solid #3b82f6',
-                      transition: 'all 0.2s ease',
-                      color: '#3b82f6'
-                    }}
-                  >
-                    Next
-                    <i className="bi bi-chevron-right ms-1"></i>
-                  </button>
+              <button
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{
+                  borderRadius: '8px',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  border: '1.5px solid #3b82f6',
+                  transition: 'all 0.2s ease',
+                  color: '#3b82f6'
+                }}
+              >
+                Next
+                <i className="bi bi-chevron-right ms-1"></i>
+              </button>
                   
                   {/* Quick page input for large datasets */}
                   {totalPages > 10 && (
@@ -2590,8 +2737,7 @@ export default function PatientVaccineTracker() {
               </div>
             </div>
           )}
-        </Card.Body>
-      </Card>
+      
       {/* Modal for viewing row data */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="xl" className="modal-modern modal-centered">
         <style>
@@ -6510,6 +6656,6 @@ export default function PatientVaccineTracker() {
           )}
         </Modal.Body>
       </Modal>
-    </Container>
+    </div>
   );
 }
