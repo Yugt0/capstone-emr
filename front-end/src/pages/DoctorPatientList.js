@@ -5594,9 +5594,9 @@ export default function DoctorPatientList() {
                   <div style={{ position: 'relative' }}>
                     <input
                       type="text"
-                      name="medication"
-                      value={medicationForm.medication || ''}
-                      onChange={handleMedicationFormChange}
+                    name="medication"
+                    value={medicationForm.medication || ''}
+                    onChange={handleMedicationFormChange}
                       onFocus={() => {
                         if (medicationForm.medication && medicationForm.medication.trim().length > 0) {
                           const filtered = recentMedications.filter(med =>
@@ -5614,18 +5614,18 @@ export default function DoctorPatientList() {
                         // Delay hiding suggestions to allow click events
                         setTimeout(() => setShowMedicationSuggestions(false), 200);
                       }}
-                      className="form-control"
+                    className="form-control"
                       placeholder="Start typing to see recent medications..."
-                      style={{
-                        border: '2px solid #e5e7eb',
-                        borderRadius: '12px',
+                    style={{
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '12px',
                         padding: '0.75rem 1rem',
-                        fontSize: '14px',
+                      fontSize: '14px',
                         width: '100%'
-                      }}
-                      required
+                    }}
+                    required
                       autoComplete="off"
-                    />
+                  />
                     {showMedicationSuggestions && medicationSuggestions.length > 0 && (
                       <div
                         style={{

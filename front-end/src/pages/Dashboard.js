@@ -1580,7 +1580,7 @@ const Dashboard = () => {
                       <div className="notification-header">
                         <i className="bi bi-exclamation-triangle-fill text-danger me-2"></i>
                         <strong>Low Stock Contraceptives (&lt; 100 units)</strong>
-                      </div>
+          </div>
                       <div className="notification-list" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                         {(() => {
                           const lowStockItems = inventoryData.filter(item => {
@@ -1747,7 +1747,7 @@ const Dashboard = () => {
                       <div className="notification-header">
                         <i className="bi bi-exclamation-triangle-fill text-danger me-2"></i>
                         <strong>Low Stock Vaccines (&lt; 100 doses)</strong>
-                      </div>
+                  </div>
                       <div className="notification-list" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                         {(() => {
                           const lowStockVaccines = vaccineInventory.filter(item => {
