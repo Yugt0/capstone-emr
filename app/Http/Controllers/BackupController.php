@@ -53,7 +53,7 @@ class BackupController extends Controller
     public function createFullBackup(Request $request): JsonResponse
     {
         try {
-            $user = $request->user();
+            $user = $request->user() ?: (object) ['name' => 'System'];
             
             // Check storage before backup
             $this->checkAndCleanStorageIfCritical();
@@ -115,7 +115,7 @@ class BackupController extends Controller
     public function createDatabaseBackup(Request $request): JsonResponse
     {
         try {
-            $user = $request->user();
+            $user = $request->user() ?: (object) ['name' => 'System'];
             
             AuditLogService::log(
                 'Backup',
@@ -174,7 +174,7 @@ class BackupController extends Controller
     public function createFilesBackup(Request $request): JsonResponse
     {
         try {
-            $user = $request->user();
+            $user = $request->user() ?: (object) ['name' => 'System'];
             
             AuditLogService::log(
                 'Backup',
@@ -248,7 +248,7 @@ class BackupController extends Controller
     public function downloadBackup(Request $request, string $backupName)
     {
         try {
-            $user = $request->user();
+            $user = $request->user() ?: (object) ['name' => 'System'];
             
             // Check multiple possible backup locations
             $backupPath = null;
@@ -303,7 +303,7 @@ class BackupController extends Controller
     public function deleteBackup(Request $request, string $backupName): JsonResponse
     {
         try {
-            $user = $request->user();
+            $user = $request->user() ?: (object) ['name' => 'System'];
             
             // Check multiple possible backup locations
             $backupPath = null;
@@ -363,7 +363,7 @@ class BackupController extends Controller
     public function cleanOldBackups(Request $request): JsonResponse
     {
         try {
-            $user = $request->user();
+            $user = $request->user() ?: (object) ['name' => 'System'];
             
             AuditLogService::log(
                 'Backup',

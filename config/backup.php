@@ -47,6 +47,15 @@ return [
                 'relative_path' => null,
             ],
 
+            'mysql' => [
+                // ...
+                'dump' => [
+                    'dump_binary_path' => 'C:/xampp/mysql/bin/', 
+                    'use_single_transaction' => true, 
+                    'timeout' => 60 * 5, // Ensures the spatie package waits longer than the mysqldump timeout
+                ],
+            ],
+
             /*
              * The names of the connections to the databases that should be backed up
              * MySQL, PostgreSQL, SQLite and Mongo databases are supported.

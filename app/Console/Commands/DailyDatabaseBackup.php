@@ -112,21 +112,58 @@ class DailyDatabaseBackup extends Command
             $filename = "database_backup_{$timestamp}.sql";
             $filepath = $backupDir . '/' . $filename;
 
-            // Build mysqldump command
-            $command = sprintf(
-                'mysqldump --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > %s',
-                escapeshellarg($host),
-                escapeshellarg($port),
-                escapeshellarg($username),
-                escapeshellarg($password),
-                escapeshellarg($database),
-                escapeshellarg($filepath)
-            );
+            // Determine mysqldump binary path. Prefer explicit env var, then configured spatie path, then system path.
+            $dumpBinaryFromEnv = env('MYSQLDUMP_PATH');
+            // Spatie backup config sits under the top-level 'backup' key in config/backup.php
+            $spatieDumpPath = config('backup.backup.source.mysql.dump.dump_binary_path') ?? null;
 
-            // Execute the command
+            if (!empty($dumpBinaryFromEnv)) {
+                $dumpBinary = rtrim($dumpBinaryFromEnv, "\\/") . DIRECTORY_SEPARATOR;
+            } elseif (!empty($spatieDumpPath)) {
+                $dumpBinary = rtrim($spatieDumpPath, "\\/") . DIRECTORY_SEPARATOR;
+            } else {
+                $dumpBinary = '';
+            }
+
+            $binaryName = (PHP_OS_FAMILY === 'Windows') ? 'mysqldump.exe' : 'mysqldump';
+            $mysqldump = $dumpBinary . $binaryName;
+
+            // Build mysqldump command with platform-appropriate quoting.
+            if (PHP_OS_FAMILY === 'Windows') {
+                // Windows cmd.exe uses double quotes for arguments. Escape any double quotes in values.
+                $escape = function ($value) {
+                    return '"' . str_replace('"', '\\"', $value) . '"';
+                };
+
+                $cmd = sprintf(
+                    '%s --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > %s',
+                    escapeshellcmd($mysqldump),
+                    $escape($host),
+                    $escape($port),
+                    $escape($username),
+                    $escape($password),
+                    $escape($database),
+                    $escape($filepath)
+                );
+            } else {
+                // POSIX systems: use escapeshellarg
+                $cmd = sprintf(
+                    '%s --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > %s',
+                    escapeshellcmd($mysqldump),
+                    escapeshellarg($host),
+                    escapeshellarg($port),
+                    escapeshellarg($username),
+                    escapeshellarg($password),
+                    escapeshellarg($database),
+                    escapeshellarg($filepath)
+                );
+            }
+
+            // Log the actual command (for debugging) then execute and capture output
+            \Log::info('DailyDatabaseBackup: executing mysqldump command: ' . $cmd);
             $output = [];
             $returnCode = 0;
-            exec($command . ' 2>&1', $output, $returnCode);
+            exec($cmd . ' 2>&1', $output, $returnCode);
 
             if ($returnCode !== 0) {
                 return [
